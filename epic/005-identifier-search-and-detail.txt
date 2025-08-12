@@ -1,0 +1,69 @@
+USER STORY: Identifier Search and Detail Views
+
+As a warehouse operator
+I want to search for and view individual product identifiers
+So that I can track the status and history of specific items
+
+ACCEPTANCE CRITERIA:
+
+IDENTIFIER SEARCH PAGE:
+- [ ] Search form with filters:
+  - Text search (IMEI or Serial Number)
+  - Product Version dropdown
+  - Status dropdown (All, In Stock, Sold, Defective, Missing, Reserved)
+- [ ] Results table with columns: ID, IMEI, Serial Number, Product Version, Status
+- [ ] Click on ID/IMEI/Serial opens identifier detail page
+- [ ] Click on Product Version opens product version detail
+- [ ] Empty state when no results found
+- [ ] Pagination if results exceed page limit
+
+IDENTIFIER DETAIL PAGE:
+- [ ] Identifier information panel:
+  - IMEI (if applicable)
+  - Serial Number (if applicable)
+  - Product Version (linked)
+  - Current Status (color-coded badge)
+  - Created date
+  - Last updated date
+
+- [ ] Actions panel with buttons:
+  - Change Status
+  - Change Identifier (IMEI/Serial swap)
+  - Change Product Version (version swap)
+  - Mark as Clearance (if status = in_stock)
+
+- [ ] Status History section:
+  - Table showing all status changes
+  - Columns: Date/Time, Old Status, New Status, Changed By, Note
+  - Sorted by date descending
+
+- [ ] Change History sections:
+  - Product version swaps
+  - Identifier swaps
+  - Combined timeline view
+
+STATUS CHANGE FUNCTIONALITY:
+- [ ] Modal dialog for status change
+- [ ] Status dropdown (excluding current status)
+- [ ] Optional note field
+- [ ] Confirmation and validation
+- [ ] Creates status_history entry
+- [ ] Updates device_identifiers.status
+- [ ] Logs user and timestamp
+
+BUSINESS RULES:
+- [ ] Status changes are logged with user and timestamp
+- [ ] Cannot change to same status
+- [ ] All status changes create history records
+- [ ] Clearance marking only available for in_stock items
+
+UI REQUIREMENTS:
+- [ ] Professional search interface
+- [ ] Color-coded status badges
+- [ ] Clear visual hierarchy in detail view
+- [ ] Responsive design
+- [ ] Loading states and error handling
+
+STORY POINTS: 6
+PRIORITY: High (Core functionality)
+DEPENDENCIES: 004-delivery-management

@@ -1,0 +1,352 @@
+id,name,type,requester,owners,description,is_completed,created_at,started_at,updated_at,moved_at,completed_at,estimate,external_ticket_count,external_tickets,is_blocked,is_a_blocker,due_date,labels,epic_labels,tasks,state,epic_id,epic,project_id,project,iteration_id,iteration,utc_offset,is_archived,team_id,team,epic_state,epic_is_archived,epic_created_at,epic_started_at,epic_due_date,objective_id,objective,objective_state,objective_created_at,objective_started_at,objective_due_date,objective_categories,epic_planned_start_date,workflow,workflow_id,priority,severity,product_area,skill_set,technical_area,custom_fields
+105544,Productversie met tracking kunnen inboeken,feature,c.lorinser@mobiel.nl,,"### **Levering aanmaken en voorraad inboeken**
+
+**Doel:**  
+Nieuwe leveringen vastleggen en direct voorraad inboeken met identifiers (IMEI, serienummer of beide), afhankelijk van de trackingconfiguratie van de productversie.
+
+---
+
+### **Functionaliteit**
+
+#### **Leveringen-overzicht**
+
+- Lijstweergave met bestaande leveringen:
+  - Leveringsnummer
+  - Leveringsdatum
+  - Aantal regels (productversies)
+  - Totaal aantal artikelen
+  - Status van levering (concept, geboekt, gedeeltelijk geboekt)
+- Actieknoppen:
+  - *Nieuwe levering*
+  - *Bewerken* (alleen zolang levering nog niet volledig geboekt is)
+  - *Verwijderen* (alleen als er nog niets geboekt is)
+
+#### **Nieuwe levering aanmaken**
+
+1. Gebruiker klikt op *Nieuwe levering*.
+2. Formulier verschijnt:
+   - Leveringsdatum (default: vandaag)
+   - Leveringsnummer
+   - Leverancier (optioneel in POC)
+3. Na opslaan komt de levering in status **concept**.
+
+#### **Productregels toevoegen aan levering**
+
+1. In de levering kan de gebruiker één of meerdere regels toevoegen:
+   - Selecteer **productversie** (dropdown)
+   - Vul **aantal** in
+2. Systeem controleert automatisch de **trackingconfiguratie** van de gekozen productversie:
+   - Geen tracking → geen extra velden
+   - IMEI → verplicht veld voor IMEI's
+   - Serienummer → verplicht veld voor serienummers
+   - Beide → beide velden verplicht
+3. Bij identifiers:
+   - Systeem toont invulvelden voor het exacte aantal ingevoerde items
+   - Validatie:
+     - Geen lege velden toegestaan
+     - Geen dubbele identifiers in huidige levering
+     - Geen identifiers die al bestaan in de database
+4. Na opslaan van de regel wordt de status per item op **op voorraad** gezet.
+
+#### **Boek levering**
+
+- Zodra alle regels identifiers bevatten waar vereist, kan gebruiker op *Boek levering* klikken.
+- Boekactie:
+  - Alle items worden definitief opgeslagen in voorraad
+  - Levering krijgt status **geboekt**
+  - Identifier-status = `in_stock`
+  - Boekdatum en gebruiker worden gelogd
+- Na boeken zijn identifiers en aantallen niet meer bewerkbaar (wijziging alleen via correctieflow).
+
+![image.png](https://media.app.shortcut.com/api/attachments/files/clubhouse-assets/5e562e9b-93d0-467e-9676-61f4f9ca6935/6895bf4f-dcbe-4e6b-9919-9d88edbff502/image.png)
+---
+
+### **Acceptatiecriteria**
+
+- Leveringen-overzicht toont alle bestaande leveringen met leveringsnummer, datum, aantal regels en status.
+- *Nieuwe levering* kan worden aangemaakt en regels kunnen worden toegevoegd.
+- Trackingconfiguratie van productversie bepaalt of en welke identifiers moeten worden ingevoerd.
+- Validatie voorkomt:
+  - Dubbele identifiers binnen levering
+  - Dubbele identifiers in hele database
+  - Onvolledige identifier-invoer
+- Levering kan pas worden geboekt als alle identifiers compleet en geldig zijn.
+- Bij inboeken worden items gekoppeld aan voorraad met status `in_stock` en wordt dit gelogd (incl. gebruiker)",false,2025/08/08 10:28:33,,2025/08/08 13:48:47,2025/08/08 10:28:33,,,0,,false,false,,,,,New,105541,Proof of Concept – Identifier Tracking,,,,,+02:00,false,60daea0f-f808-4cbb-b614-bd9edd713929,Backend,Planned,false,2025/08/08 10:15:24,,2025/09/05 02:00:00,,,,,,,,2025/08/19 02:00:00,Development,500000005,,,,,,
+105579,Identifier-swap kunnen uitvoeren,feature,c.lorinser@mobiel.nl,,"## Identifier wijzigen
+
+### Doel
+Mogelijk maken om de IMEI en/of het serienummer van een bestaand product te corrigeren wanneer deze verkeerd is geregistreerd, **zonder de productversie te wijzigen**
+
+---
+
+### Functionaliteit
+- Op de **identifier detailpagina** is een knop **""Wijzig IMEI/serienummer""** beschikbaar.
+- Klikken opent een formulier met:
+  - Huidige identifiers (read-only)
+  - Nieuw IMEI (optioneel, afhankelijk van trackingconfiguratie)
+  - Nieuw serienummer (optioneel, afhankelijk van trackingconfiguratie)
+  - Notitieveld (optioneel, voor reden wijziging)
+
+#### Validatieregels
+- Nieuwe waarde mag **niet identiek** zijn aan de huidige waarde.
+- Indien trackingconfiguratie **IMEI vereist** → nieuwe IMEI is verplicht.
+- Indien trackingconfiguratie **serienummer vereist** → nieuw serienummer is verplicht.
+- Nieuwe waarde mag **niet al bestaan** bij een andere identifier.
+
+#### Na bevestiging wordt:
+- De identifier-record bijgewerkt met de nieuwe waarde(s).
+- De wijziging gelogd met:
+  - Oude waarde(s)
+  - Nieuwe waarde(s)
+  - Datum/tijd
+  - Gebruiker
+  - Optionele notitie
+
+---
+
+### Acceptatie
+- Gebruiker kan een wijziging starten vanaf de identifier detailpagina.
+- Formulier toont **alleen relevante velden** op basis van de trackingconfiguratie van de productversie.
+- Validatie voorkomt **dubbele identifiers** en **identieke herinvoer**.
+- Systeem logt alle wijzigingen inclusief:
+  - Oude en nieuwe waarden
+  - Gebruiker
+  - Tijdstip
+  - Reden
+- Na wijziging wordt de **detailpagina vernieuwd** met de nieuwe identifiers en wijzigingsgeschiedenis.
+
+![graphviz (1).png](https://media.app.shortcut.com/api/attachments/files/clubhouse-assets/5e562e9b-93d0-467e-9676-61f4f9ca6935/6895fcff-bbba-4980-8ed4-cb2650533e2d/graphviz%20\(1\).png)",false,2025/08/08 15:35:06,,2025/08/11 09:58:14,2025/08/08 15:35:06,,,0,,false,false,,,,,New,105541,Proof of Concept – Identifier Tracking,,,,,+02:00,false,60daea0f-f808-4cbb-b614-bd9edd713929,Backend,Planned,false,2025/08/08 10:15:24,,2025/09/05 02:00:00,,,,,,,,2025/08/19 02:00:00,Development,500000005,,,,,,
+105551,Beheerinterface voor productversies,feature,c.lorinser@mobiel.nl,,"**Doel:**  
+Eenvoudige beheerinterface waarmee gebruikers productversies kunnen bekijken, toevoegen, wijzigen en verwijderen, inclusief het instellen van de trackingconfiguratie.
+
+**Functionaliteit:**
+
+- Overzichtspagina met tabel van alle productversies:
+  - Kolommen: **Productversie**, **Trackingconfiguratie**, **Acties**
+
+- **Navigatie:**
+  - Iedere productversie in het overzicht is klikbaar en opent de productversie-detailpagina:
+    - **Bovenaan:** eigenschappen van de productversie (naam, EAN, trackingconfiguratie) met mogelijkheid tot wijzigen
+    - **Paginasectie:** tabel met alle gekoppelde identifiers en hun huidige status
+
+- Actie per productversie in het overzicht: **Verwijderen**
+
+- Knop **“Nieuwe productversie toevoegen”** opent formulier:
+  - **Naam** (verplicht)
+  - **EAN** (optioneel in POC)
+  - **Trackingconfiguratie** (dropdown: Geen tracking, IMEI, Serienummer, Beide)
+
+---
+
+### Acceptatie
+- Overzicht toont alle bestaande productversies met naam (A>Z) en trackingconfiguratie
+- Elke productversie is klikbaar naar een detailpagina met eigenschappen en lijst met gekoppelde identifiers en hun status
+- Gebruiker kan nieuwe productversie toevoegen met de genoemde velden
+- Gebruiker kan bestaande productversie wijzigen vanuit de detailpagina
+- Gebruiker kan productversie verwijderen
+",false,2025/08/08 11:28:09,,2025/08/08 11:33:26,2025/08/08 11:28:09,,,0,,false,false,,,,,New,105541,Proof of Concept – Identifier Tracking,,,,,+02:00,false,60daea0f-f808-4cbb-b614-bd9edd713929,Backend,Planned,false,2025/08/08 10:15:24,,2025/09/05 02:00:00,,,,,,,,2025/08/19 02:00:00,Development,500000005,,,,,,
+105582,Producten als koopjeskelder kunnen markeren,feature,c.lorinser@mobiel.nl,,"### Doel
+Mogelijkheid om specifieke voorraaditems (identifiers) te markeren als “Koopjeskelder”-product met optionele kortingsprijs en reden, zodat deze apart verkocht kunnen worden op een speciaal deel van de site
+
+---
+
+## Functionaliteit (beheerinterface)
+
+### Op detailpagina van unieke identifier
+
+Extra acties:
+
+- Markeer als koopjeskelder
+- Verwijder koopjeskelderstatus
+
+""Markeer als koopjeskelder"" opent een dialoog met:
+
+- Checkbox: Koopjeskelder (aan/uit)
+- Optioneel veld: Kortingprijs of percentage? (overrulet standaardprijs)
+- Optioneel veld: Reden ( tekstveld, bijv. “lichte doosbeschadiging”)
+
+---
+
+### Koopjeskelder-overzichtspagina
+
+Tabel met alle identifiers waar `is_clearance = true`
+
+**Kolommen:**
+
+- Productversienaam
+- IMEI / serienummer
+- Status
+- Kortingprijs
+- Reden
+- Acties (bijv. **Verwijder koopjeskelderstatus**)
+
+--- 
+## Datamodel-aanpassing?
+
+Toevoegingen aan `device_identifiers`:
+- `is_clearance` (boolean, default: false)
+- `clearance_price` (decimal, nullable)
+- `clearance_reason` (text, nullable)
+
+---
+
+## Acceptatie
+- Beheerder kan een individuele identifier markeren als koopjeskelder, met optionele korting en reden
+- Alleen identifiers met status ""op voorraad"" kunnen gemarkeerd worden als koopjeskelder
+- In de overzichtspagina zijn alle koopjeskelder-identifiers inzichtelijk met bijbehorende gegevens.
+- Bij verwijderen van koopjeskelderstatus worden de velden `is_clearance`, `clearance_price`, en `clearance_reason` leeggemaakt
+
+![graphviz (3).png](https://media.app.shortcut.com/api/attachments/files/clubhouse-assets/5e562e9b-93d0-467e-9676-61f4f9ca6935/68961028-435f-4b7c-bd34-4d2aca677b91/graphviz%20(3).png)",false,2025/08/08 16:55:15,,2025/08/08 16:56:41,2025/08/08 16:55:15,,,0,,false,false,,,,,New,105541,Proof of Concept – Identifier Tracking,,,,,+02:00,false,60daea0f-f808-4cbb-b614-bd9edd713929,Backend,Planned,false,2025/08/08 10:15:24,,2025/09/05 02:00:00,,,,,,,,2025/08/19 02:00:00,Development,500000005,,,,,,
+105573,Lijst met alle identifiers en detailpagina,feature,c.lorinser@mobiel.nl,,"### Doel: inzicht in alle identifiers en hun historie
+
+### Functionaliteit:
+- Nieuwe pagina met tabel met alle identifiers (gesorteerd A>Z)
+    - Interne ID (?)
+    - IMEI
+    - Serienummer
+    - Productversienaam
+    - Status
+- ID/IMEI/serienummer is klikbaar en gaat naar de detailpagina van deze ID
+- Primary filters op IMEI/serienummer, productversie en status
+---
+Detailpagina van identifier:
+- Tabel met alle statuswijzigingen (gesorteerd gewijzigd op nieuw > oud)
+    - Interne ID
+    - IMEI
+    - Serienummer
+    - Productversienaam
+    - Status
+    - Gewijzigd op
+    - Gewijzigd door
+    - Notitie",false,2025/08/08 13:56:35,,2025/08/08 14:57:02,2025/08/08 13:56:35,,,0,,false,false,,,,,New,105541,Proof of Concept – Identifier Tracking,,,,,+02:00,false,60daea0f-f808-4cbb-b614-bd9edd713929,Backend,Planned,false,2025/08/08 10:15:24,,2025/09/05 02:00:00,,,,,,,,2025/08/19 02:00:00,Development,500000005,,,,,,
+105547,Beheerinterface POC,feature,c.lorinser@mobiel.nl,,"### 1. **Productversies beheren**
+
+**Doel:** Overzicht en beheer van productversies, inclusief trackingconfiguratie.
+
+**Functionaliteit:**
+
+- Lijst van productversies (naam, SKU, trackingconfiguratie).
+- Knoppen: _Toevoegen_, _Wijzigen_, _Verwijderen_.
+- Formulier voor toevoegen/wijzigen:
+  - Naam  
+  - SKU  
+  - Trackingconfiguratie (dropdown: geen, IMEI, serienummer, beide)  
+  - Eventuele omschrijving
+
+---
+
+### 2. **Leveringen beheren**
+
+**Doel:** Leveringen vastleggen en koppelen aan identifiers.
+
+**Functionaliteit:**
+
+- Lijst met leveringen (leveringsnummer, datum, gekoppelde productversies, aantal).
+- _Levering aanmaken_ formulier:
+  - Leveringsdatum  
+  - Productversie selecteren  
+  - Aantal  
+  - Vereiste identifiers invullen (afhankelijk van trackingconfiguratie)
+
+---
+
+### 3. **Voorraad per productversie inzien**
+
+**Doel:** Inzicht in huidige voorraad en gekoppelde identifiers.
+
+**Functionaliteit:**
+
+- Tabel met alle voorraad
+  - Productversienaam
+  - Voorraad aantal
+- Voorraad is klikbaar en toont de individuele identifiers die op voorraad zijn
+- Individuele identifiers zijn klikbaar en toont de statushistorie
+
+---
+
+### 4. **Statuswijzigingen uitvoeren**
+
+**Doel:** Identifierstatus kunnen aanpassen (op voorraad, defect, vermist tijdens transport, etc.).
+
+**Functionaliteit:**
+
+- NIeuw overzicht `Statuswijzigingen`
+- Invoerveld voor identifier > opent identifier_pagina
+  - Dropdown met nieuwe status  
+  - Optioneel notitieveld
+- Automatisch loggen in statusgeschiedenis",false,2025/08/08 10:55:05,,2025/08/11 09:46:14,2025/08/08 10:55:05,,,0,,false,false,,,,,New,105541,Proof of Concept – Identifier Tracking,,,,,+02:00,false,60daea0f-f808-4cbb-b614-bd9edd713929,Backend,Planned,false,2025/08/08 10:15:24,,2025/09/05 02:00:00,,,,,,,,2025/08/19 02:00:00,Development,500000005,,,,,,
+105572,Voorraad per productversie kunnen inzien,feature,c.lorinser@mobiel.nl,,"### Doel: inzicht in huidige voorraad en gekoppelde identifiers.
+
+### Functionaliteit:
+- Tabel met alle productversies (A>Z)
+    - Productversienaam
+    - Voorraad aantal
+- Voorraad is klikbaar en gaat naar de identifiers pagina met filter op productversie en status `in_stock`
+- Als tracking niet geconfigureerd is op de productversie, is de voorraad niet klikbaar",false,2025/08/08 13:51:09,,2025/08/08 14:30:32,2025/08/08 13:51:09,,,0,,false,false,,,,,New,105541,Proof of Concept – Identifier Tracking,,,,,+02:00,false,60daea0f-f808-4cbb-b614-bd9edd713929,Backend,Planned,false,2025/08/08 10:15:24,,2025/09/05 02:00:00,,,,,,,,2025/08/19 02:00:00,Development,500000005,,,,,,
+105542,Datamodel en basic interface opzetten voor identifier-tracking,feature,c.lorinser@mobiel.nl,,"### Acceptatie
+- Onderzocht hoe product_identifiers en history nu werkt in mother
+- Nieuw concept-datamodel opgezet dat alle functionele wensen ondersteunt, en kan aansluiten op productversies in productbeheer en de order in mother
+- Sample data is beschikbaar en simpele interface om deze in te zien/wijzigen
+- Productversies hebben een trackingconfiguratie-attribuut: geen, IMEI, serienummer, beide",false,2025/08/08 10:20:36,,2025/08/08 11:17:44,2025/08/08 10:20:36,,,0,,false,false,,,,,New,105541,Proof of Concept – Identifier Tracking,,,,,+02:00,false,60daea0f-f808-4cbb-b614-bd9edd713929,Backend,Planned,false,2025/08/08 10:15:24,,2025/09/05 02:00:00,,,,,,,,2025/08/19 02:00:00,Development,500000005,,,,,,
+105577,Productversie-swap kunnen uitvoeren,feature,c.lorinser@mobiel.nl,,"## Doel
+
+Mogelijk maken dat een geregistreerd apparaat (met IMEI en/of serienummer) wordt overgezet naar een andere productversie, terwijl de identifiers gelijk blijven. De wijziging wordt gelogd in een wijzigingsgeschiedenis.
+
+---
+
+## Functionaliteit
+
+**Start:**  
+Gebruiker start op de detailpagina van een individuele identifier (IMEI/serienummer).
+
+**Knop:**  
+*Wijzig productversie* opent een formulier/modal met:
+
+- Huidige productversie (read-only)
+- Selectieveld nieuwe productversie (dropdown, verplicht)
+- Optioneel notitieveld (reden wijziging)
+
+### Validatie
+- Nieuwe productversie mag niet gelijk zijn aan huidige productversie.
+- Nieuwe productversie moet actief zijn in het systeem.
+
+### Na bevestigen
+- Device blijft dezelfde identifiers behouden.
+- Relatie met originele inkooporderregel blijft behouden
+- In productversiewijzigingsgeschiedenis wordt gelogd:
+  - Datum/tijd wijziging
+  - Oude productversie
+  - Nieuwe productversie
+  - Gebruiker
+  - Eventuele notitie
+
+---
+
+## Interface aanpassingen
+
+### Op de identifier detailpagina
+
+- Segment **""Historie""** met statuswijzigingen én productversiewijzigingen in één tijdlijn.
+
+### Op de productversie detailpagina
+
+- Lijst met identifiers waarbij een productversieswap heeft plaatsgevonden (historisch inzicht).
+
+---
+
+## Acceptatie
+
+- Gebruiker kan via identifier detailpagina een productversiewijziging uitvoeren.
+- Systeem valideert dat de nieuwe productversie verschilt van de huidige.
+- Wijziging wordt direct doorgevoerd en vastgelegd in wijzigingsgeschiedenis.
+- Historie toont zowel statuswijzigingen als productversiewijzigingen.
+- Interface toont per wijziging:
+  - Datum/tijd
+  - Oude en nieuwe productversie
+  - Gebruiker
+  - Notitie
+
+
+![graphviz.png](https://media.app.shortcut.com/api/attachments/files/clubhouse-assets/5e562e9b-93d0-467e-9676-61f4f9ca6935/6895fbe9-29cd-46cb-9a56-7546b4012d7b/graphviz.png)
+
+",false,2025/08/08 15:30:31,,2025/08/08 15:32:23,2025/08/08 15:30:31,,,0,,false,false,,,,,New,105541,Proof of Concept – Identifier Tracking,,,,,+02:00,false,60daea0f-f808-4cbb-b614-bd9edd713929,Backend,Planned,false,2025/08/08 10:15:24,,2025/09/05 02:00:00,,,,,,,,2025/08/19 02:00:00,Development,500000005,,,,,,

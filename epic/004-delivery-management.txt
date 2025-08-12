@@ -1,0 +1,57 @@
+USER STORY: Delivery Management and Stock Entry
+
+As a warehouse operator
+I want to create deliveries and register stock with identifiers
+So that I can track individual products from receipt to sale
+
+ACCEPTANCE CRITERIA:
+
+DELIVERY OVERVIEW:
+- [ ] List all deliveries with columns: Number, Date, Supplier, Lines, Total Items, Status
+- [ ] Status badges: Concept (gray), Booked (green), Partially Booked (yellow)
+- [ ] "New Delivery" button
+- [ ] Click on delivery number opens detail page
+
+DELIVERY CREATION:
+- [ ] Form with fields:
+  - Delivery Number (required, unique)
+  - Delivery Date (required, defaults to today)
+  - Supplier (optional)
+- [ ] After creation, redirect to delivery detail page in "Concept" status
+
+DELIVERY DETAIL PAGE:
+- [ ] Delivery information panel
+- [ ] Statistics panel (number of lines, total items)
+- [ ] Add product line form (only when status = concept)
+- [ ] List of existing product lines
+- [ ] "Book Delivery" button (only when status = concept)
+
+ADD PRODUCT LINE:
+- [ ] Product version dropdown
+- [ ] Quantity field
+- [ ] Dynamic identifier fields based on tracking mode:
+  - None: No additional fields
+  - IMEI: IMEI input for each item
+  - Serial: Serial number input for each item  
+  - Both: Both IMEI and serial number inputs
+- [ ] JavaScript to show/hide identifier fields dynamically
+- [ ] Validation: All required identifiers must be unique
+
+BOOK DELIVERY:
+- [ ] Changes delivery status to "Booked"
+- [ ] Creates device_identifier records for all items
+- [ ] Sets initial status to "in_stock"
+- [ ] Creates status_history entries
+- [ ] Confirmation dialog before booking
+- [ ] Cannot modify delivery after booking
+
+BUSINESS RULES:
+- [ ] Delivery in concept can be edited/deleted
+- [ ] Booked deliveries are read-only
+- [ ] IMEI/Serial numbers must be globally unique
+- [ ] Cannot book empty delivery
+- [ ] All identifier fields must be completed per tracking config
+
+STORY POINTS: 8
+PRIORITY: High (Core functionality)
+DEPENDENCIES: 003-product-versions-crud

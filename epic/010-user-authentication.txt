@@ -1,0 +1,66 @@
+USER STORY: User Authentication and Authorization
+
+As a system administrator
+I want to implement user authentication and role-based access
+So that only authorized personnel can access and modify inventory data
+
+ACCEPTANCE CRITERIA:
+
+AUTHENTICATION SYSTEM:
+- [ ] Login page with username/password fields
+- [ ] Session management with secure cookies
+- [ ] Logout functionality
+- [ ] Password hashing (bcrypt or similar)
+- [ ] Session timeout after inactivity
+- [ ] "Remember me" option (optional)
+
+USER MANAGEMENT:
+- [ ] User registration (admin only)
+- [ ] User roles/permissions:
+  - Admin: Full access to all functions
+  - Manager: View all, modify inventory, manage deliveries
+  - Operator: Limited to deliveries and status changes
+  - Viewer: Read-only access
+- [ ] User profile management
+- [ ] Password reset functionality
+
+AUTHORIZATION MIDDLEWARE:
+- [ ] Protect routes based on user roles
+- [ ] Redirect unauthorized users to login
+- [ ] API endpoints require authentication
+- [ ] Different permission levels for different actions
+
+AUDIT LOGGING:
+- [ ] Log all user actions in history tables
+- [ ] Store actual usernames instead of "system" or "admin"
+- [ ] Track who made what changes when
+- [ ] Login/logout activity logging
+
+SECURITY FEATURES:
+- [ ] Rate limiting for login attempts
+- [ ] Account lockout after failed attempts
+- [ ] Secure session configuration
+- [ ] CSRF protection
+- [ ] Input validation and sanitization
+
+DATABASE ADDITIONS:
+- [ ] users table (id, username, email, password_hash, role, created_at, last_login)
+- [ ] sessions table (optional, for session storage)
+- [ ] audit_log table (id, user_id, action, table_name, record_id, changes, timestamp)
+
+UI INTEGRATION:
+- [ ] Show current user in navigation header
+- [ ] Role-based menu items visibility
+- [ ] User profile dropdown menu
+- [ ] Login/logout user experience
+- [ ] Access denied pages with proper messaging
+
+ROLE PERMISSIONS:
+- [ ] Admin: Everything
+- [ ] Manager: All CRUD operations, user management (non-admin)
+- [ ] Operator: Deliveries, status changes, identifier swaps
+- [ ] Viewer: Read-only access to all data
+
+STORY POINTS: 8
+PRIORITY: Medium (Production readiness)
+DEPENDENCIES: All core functionality (001-009)

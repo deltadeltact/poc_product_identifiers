@@ -1,0 +1,123 @@
+<%- include('partials/header', { title: 'Dashboard' }) %>
+
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Identifier Tracking POC Dashboard
+        </h1>
+        
+        <p class="lead">
+            Welkom bij de Proof of Concept voor product identifier tracking. 
+            Dit systeem houdt producten bij op IMEI/serienummer niveau.
+        </p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Productversies</h5>
+                        <p class="card-text">Beheer trackingconfiguratie</p>
+                    </div>
+                    <i class="fas fa-boxes fa-2x opacity-75"></i>
+                </div>
+                <a href="/product-versions" class="btn btn-outline-light btn-sm mt-2">
+                    Bekijk <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Identifiers</h5>
+                        <p class="card-text">IMEI/Serienummers zoeken</p>
+                    </div>
+                    <i class="fas fa-search fa-2x opacity-75"></i>
+                </div>
+                <a href="/identifiers" class="btn btn-outline-light btn-sm mt-2">
+                    Zoeken <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Voorraad</h5>
+                        <p class="card-text">Voorraad per productversie</p>
+                    </div>
+                    <i class="fas fa-warehouse fa-2x opacity-75"></i>
+                </div>
+                <a href="/stock" class="btn btn-outline-light btn-sm mt-2">
+                    Inzien <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Leveringen</h5>
+                        <p class="card-text">Voorraad inboeken</p>
+                    </div>
+                    <i class="fas fa-truck fa-2x opacity-75"></i>
+                </div>
+                <a href="/deliveries" class="btn btn-outline-light btn-sm mt-2">
+                    Beheren <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Functionaliteit in deze POC
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Geïmplementeerd:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i> Productversies beheren</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Trackingconfiguratie instellen</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Identifiers zoeken en bekijken</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Voorraad overzicht</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Statuswijzigingen</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Nog te implementeren:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-clock text-warning me-2"></i> Leveringen inboeken</li>
+                            <li><i class="fas fa-clock text-warning me-2"></i> Identifier swaps</li>
+                            <li><i class="fas fa-clock text-warning me-2"></i> Productversie swaps</li>
+                            <li><i class="fas fa-clock text-warning me-2"></i> Koopjeskelder markering</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

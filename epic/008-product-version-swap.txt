@@ -1,0 +1,76 @@
+USER STORY: Product Version Swap
+
+As a warehouse operator  
+I want to change the product version of a registered device
+So that I can correct misclassified items while keeping the same identifiers
+
+ACCEPTANCE CRITERIA:
+
+PRODUCT VERSION SWAP FUNCTIONALITY:
+- [ ] "Change Product Version" button on identifier detail page
+- [ ] Modal dialog with form fields:
+  - Current Product Version (read-only)
+  - New Product Version (dropdown, required)
+  - Optional note field for reason
+
+VALIDATION RULES:
+- [ ] New product version cannot be the same as current
+- [ ] New product version must be active in system
+- [ ] New product version tracking mode must be compatible:
+  - If current has IMEI, new version must support IMEI tracking
+  - If current has Serial, new version must support Serial tracking
+  - Prevent swaps that would make existing identifiers invalid
+
+COMPATIBILITY MATRIX:
+- [ ] None → Any (no constraints)
+- [ ] IMEI → IMEI or Both (must support IMEI)
+- [ ] Serial → Serial or Both (must support Serial) 
+- [ ] Both → Both only (must support both identifiers)
+
+SWAP EXECUTION:
+- [ ] Update device_identifiers.product_version_id
+- [ ] Create entry in product_version_history table:
+  - device_identifier_id
+  - old_product_version_id
+  - new_product_version_id
+  - changed_by (current user)
+  - note (optional reason)
+  - timestamp
+
+HISTORY DISPLAY:
+- [ ] Product Version History section on detail page
+- [ ] Table showing all version swaps:
+  - Date/Time
+  - Old Product Version → New Product Version
+  - Changed By
+  - Reason/Note
+- [ ] Links to both old and new product version detail pages
+
+BUSINESS RULES:
+- [ ] IMEI and serial numbers remain unchanged
+- [ ] Device status remains unchanged
+- [ ] All swaps are logged permanently
+- [ ] Purchase order links may be affected (document this risk)
+- [ ] User must be authorized to perform swaps
+
+IMPACT WARNINGS:
+- [ ] Show compatibility check results
+- [ ] Warn about potential purchase order impacts
+- [ ] Confirm tracking mode changes
+- [ ] Display summary of what will change
+
+UI REQUIREMENTS:
+- [ ] Clear modal with old vs new product version
+- [ ] Dropdown filtered to show only compatible versions
+- [ ] Validation messages for incompatible selections
+- [ ] Confirmation dialog with impact summary
+- [ ] Success notification with updated information
+
+EDGE CASES:
+- [ ] Handle if new product version gets deleted later
+- [ ] Show historical product version names even if deleted
+- [ ] Prevent circular swaps or excessive swap history
+
+STORY POINTS: 6
+PRIORITY: Medium (Correction functionality)  
+DEPENDENCIES: 007-identifier-swap

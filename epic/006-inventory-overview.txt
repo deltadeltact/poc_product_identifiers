@@ -1,0 +1,62 @@
+USER STORY: Inventory Overview and Stock Tracking
+
+As a warehouse manager
+I want to view inventory levels per product version
+So that I can monitor stock levels and make purchasing decisions
+
+ACCEPTANCE CRITERIA:
+
+INVENTORY OVERVIEW PAGE:
+- [ ] Table showing all product versions with columns:
+  - Product Version Name
+  - Tracking Mode (color-coded badge)
+  - Current Stock Count
+  - Actions (View Details, View Identifiers)
+
+- [ ] Stock count logic:
+  - For tracking modes (imei/serial/both): Count of identifiers with status = 'in_stock'
+  - For no tracking: Show "N/A" (no individual tracking)
+
+- [ ] Click on stock count opens filtered identifier search (product_version + in_stock status)
+- [ ] Click on product name opens product version detail page
+- [ ] Visual indicators for stock levels:
+  - Green badge for items in stock
+  - Gray badge for zero stock
+  - "N/A" for non-tracked items
+
+PRODUCT VERSION DETAIL ENHANCEMENTS:
+- [ ] Stock statistics panel:
+  - Total identifiers count
+  - In stock count
+  - Status distribution chart/progress bar
+  - Breakdown by status (sold, defective, missing, etc.)
+
+- [ ] Associated identifiers table:
+  - Show all identifiers for this product version
+  - Columns based on tracking mode (IMEI, Serial, or both)
+  - Status, Last Updated, Actions
+  - Link to individual identifier detail
+
+BUSINESS RULES:
+- [ ] Only product versions with tracking show clickable stock counts
+- [ ] Stock count only includes status = 'in_stock'
+- [ ] Non-tracked products show informational message
+- [ ] Real-time stock updates when status changes
+
+DASHBOARD INTEGRATION:
+- [ ] Dashboard cards showing:
+  - Total product versions
+  - Total items in stock
+  - Low stock alerts (if applicable)
+  - Recent activity summary
+
+UI REQUIREMENTS:
+- [ ] Clear visual distinction between tracked and non-tracked products
+- [ ] Responsive table design
+- [ ] Professional dashboard layout
+- [ ] Quick access to detailed views
+- [ ] Progress bars for stock distribution visualization
+
+STORY POINTS: 4
+PRIORITY: Medium (Reporting/Overview)
+DEPENDENCIES: 005-identifier-search-and-detail

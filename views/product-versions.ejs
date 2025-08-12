@@ -1,0 +1,103 @@
+<%- include('partials/header', { title: 'Productversies' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-boxes me-2"></i>
+        Productversies
+    </h1>
+    <a href="/product-versions/new" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>
+        Nieuwe productversie
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <% if (productVersions.length === 0) { %>
+            <div class="text-center py-5">
+                <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Geen productversies gevonden</h5>
+                <p class="text-muted">Maak je eerste productversie aan om te beginnen.</p>
+                <a href="/product-versions/new" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Nieuwe productversie
+                </a>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Productversie</th>
+                            <th>EAN</th>
+                            <th>Trackingconfiguratie</th>
+                            <th>Voorraad</th>
+                            <th>Totaal Identifiers</th>
+                            <th>Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% productVersions.forEach(pv => { %>
+                            <tr>
+                                <td>
+                                    <a href="/product-versions/<%= pv.id %>" class="text-decoration-none">
+                                        <strong><%= pv.name %></strong>
+                                    </a>
+                                </td>
+                                <td><%= pv.ean || '-' %></td>
+                                <td>
+                                    <% 
+                                        let badgeClass = '';
+                                        let trackingText = '';
+                                        switch(pv.tracking_mode) {
+                                            case 'none': 
+                                                badgeClass = 'bg-secondary';
+                                                trackingText = 'Geen tracking';
+                                                break;
+                                            case 'imei':
+                                                badgeClass = 'bg-info';
+                                                trackingText = 'IMEI';
+                                                break;
+                                            case 'serial':
+                                                badgeClass = 'bg-warning';
+                                                trackingText = 'Serienummer';
+                                                break;
+                                            case 'both':
+                                                badgeClass = 'bg-success';
+                                                trackingText = 'IMEI + Serienummer';
+                                                break;
+                                        }
+                                    %>
+                                    <span class="badge <%= badgeClass %>">
+                                        <%= trackingText %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (pv.tracking_mode === 'none') { %>
+                                        <span class="text-muted">N.v.t.</span>
+                                    <% } else { %>
+                                        <span class="badge bg-primary">
+                                            <%= pv.stock_count || 0 %>
+                                        </span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <span class="badge bg-outline-secondary">
+                                        <%= pv.total_identifiers || 0 %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/product-versions/<%= pv.id %>" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-eye"></i> Bekijken
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

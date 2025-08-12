@@ -1,0 +1,157 @@
+<%- include('partials/header', { title: 'Identifiers' }) %>
+
+<h1>
+    <i class="fas fa-search me-2"></i>
+    Identifiers zoeken
+</h1>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="/identifiers">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">IMEI / Serienummer</label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="search" 
+                        name="search" 
+                        value="<%= filters.search || '' %>"
+                        placeholder="Zoek op IMEI of serienummer">
+                </div>
+                <div class="col-md-3">
+                    <label for="product_version" class="form-label">Productversie</label>
+                    <select class="form-select" id="product_version" name="product_version">
+                        <option value="">Alle productversies</option>
+                        <% productVersions.forEach(pv => { %>
+                            <option value="<%= pv.id %>" <%= filters.product_version == pv.id ? 'selected' : '' %>>
+                                <%= pv.name %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Alle statussen</option>
+                        <option value="in_stock" <%= filters.status === 'in_stock' ? 'selected' : '' %>>Op voorraad</option>
+                        <option value="sold" <%= filters.status === 'sold' ? 'selected' : '' %>>Verkocht</option>
+                        <option value="defective" <%= filters.status === 'defective' ? 'selected' : '' %>>Defect</option>
+                        <option value="missing" <%= filters.status === 'missing' ? 'selected' : '' %>>Vermist</option>
+                        <option value="reserved" <%= filters.status === 'reserved' ? 'selected' : '' %>>Gereserveerd</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Zoeken
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            Gevonden identifiers (<%= identifiers.length %>)
+        </h5>
+    </div>
+    <div class="card-body">
+        <% if (identifiers.length === 0) { %>
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Geen identifiers gevonden</h5>
+                <p class="text-muted">Pas je zoekfilters aan of boek nieuwe voorraad in.</p>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>IMEI</th>
+                            <th>Serienummer</th>
+                            <th>Productversie</th>
+                            <th>Status</th>
+                            <th>Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% identifiers.forEach(identifier => { %>
+                            <tr>
+                                <td>
+                                    <a href="/identifiers/<%= identifier.id %>" class="text-decoration-none">
+                                        #<%= identifier.id %>
+                                    </a>
+                                </td>
+                                <td>
+                                    <% if (identifier.imei) { %>
+                                        <code><%= identifier.imei %></code>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (identifier.serial_number) { %>
+                                        <code><%= identifier.serial_number %></code>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <a href="/product-versions/<%= identifier.product_version_id %>" class="text-decoration-none">
+                                        <%= identifier.product_version_name %>
+                                    </a>
+                                </td>
+                                <td>
+                                    <% 
+                                        let statusClass = '';
+                                        let statusText = '';
+                                        switch(identifier.status) {
+                                            case 'in_stock':
+                                                statusClass = 'bg-success';
+                                                statusText = 'Op voorraad';
+                                                break;
+                                            case 'sold':
+                                                statusClass = 'bg-primary';
+                                                statusText = 'Verkocht';
+                                                break;
+                                            case 'defective':
+                                                statusClass = 'bg-danger';
+                                                statusText = 'Defect';
+                                                break;
+                                            case 'missing':
+                                                statusClass = 'bg-warning';
+                                                statusText = 'Vermist';
+                                                break;
+                                            case 'reserved':
+                                                statusClass = 'bg-info';
+                                                statusText = 'Gereserveerd';
+                                                break;
+                                        }
+                                    %>
+                                    <span class="badge <%= statusClass %>">
+                                        <%= statusText %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/identifiers/<%= identifier.id %>" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Bekijken
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

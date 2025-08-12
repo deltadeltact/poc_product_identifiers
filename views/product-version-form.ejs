@@ -1,0 +1,77 @@
+<%- include('partials/header', { title: productVersion ? 'Productversie wijzigen' : 'Nieuwe productversie' }) %>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-<%= productVersion ? 'edit' : 'plus' %> me-2"></i>
+                    <%= productVersion ? 'Productversie wijzigen' : 'Nieuwe productversie' %>
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/product-versions<%= productVersion ? '/' + productVersion.id : '' %>">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Productversie naam *</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="name" 
+                            name="name" 
+                            value="<%= productVersion ? productVersion.name : '' %>"
+                            required>
+                        <div class="form-text">Bijvoorbeeld: "iPhone 14 Pro 128GB"</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ean" class="form-label">EAN</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="ean" 
+                            name="ean" 
+                            value="<%= productVersion ? productVersion.ean || '' : '' %>"
+                            pattern="[0-9]{13}"
+                            maxlength="13">
+                        <div class="form-text">Optioneel in POC - 13 cijfers</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tracking_mode" class="form-label">Trackingconfiguratie *</label>
+                        <select class="form-select" id="tracking_mode" name="tracking_mode" required>
+                            <option value="">Selecteer trackingmodus</option>
+                            <option value="none" <%= productVersion && productVersion.tracking_mode === 'none' ? 'selected' : '' %>>
+                                Geen tracking
+                            </option>
+                            <option value="imei" <%= productVersion && productVersion.tracking_mode === 'imei' ? 'selected' : '' %>>
+                                IMEI tracking
+                            </option>
+                            <option value="serial" <%= productVersion && productVersion.tracking_mode === 'serial' ? 'selected' : '' %>>
+                                Serienummer tracking
+                            </option>
+                            <option value="both" <%= productVersion && productVersion.tracking_mode === 'both' ? 'selected' : '' %>>
+                                IMEI + Serienummer tracking
+                            </option>
+                        </select>
+                        <div class="form-text">
+                            Bepaalt welke identifiers verplicht zijn bij voorraad inboeken
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="/product-versions" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Terug
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            <%= productVersion ? 'Wijzigingen opslaan' : 'Productversie aanmaken' %>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

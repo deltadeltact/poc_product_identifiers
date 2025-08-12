@@ -1,0 +1,31 @@
+USER STORY: Database Setup and Core Schema
+
+As a developer
+I want to set up the database schema for identifier tracking
+So that the system can store product versions, identifiers, and tracking history
+
+ACCEPTANCE CRITERIA:
+- [ ] Database schema created with all required tables:
+  - product_versions (id, name, ean, tracking_mode, timestamps)
+  - device_identifiers (id, product_version_id, imei, serial_number, status, clearance fields, timestamps)
+  - status_history (id, device_identifier_id, old_status, new_status, changed_by, note, timestamp)
+  - product_version_history (id, device_identifier_id, old/new_product_version_id, changed_by, note, timestamp)
+  - identifier_history (id, device_identifier_id, old/new identifiers, changed_by, note, timestamp)
+  - deliveries (id, delivery_number, delivery_date, supplier, status, timestamps)
+  - delivery_lines (id, delivery_id, product_version_id, quantity, timestamp)
+
+- [ ] Proper foreign key relationships established
+- [ ] Unique constraints on IMEI and serial numbers
+- [ ] Check constraints for status and tracking_mode enums
+- [ ] Database migration scripts created
+- [ ] Sample/seed data available for testing
+
+TECHNICAL NOTES:
+- Use appropriate data types (TEXT, INTEGER, DECIMAL, DATETIME)
+- Tracking modes: 'none', 'imei', 'serial', 'both'
+- Status values: 'in_stock', 'sold', 'defective', 'missing', 'reserved'
+- Delivery status: 'concept', 'booked', 'partially_booked'
+
+STORY POINTS: 3
+PRIORITY: High (Foundation)
+DEPENDENCIES: None

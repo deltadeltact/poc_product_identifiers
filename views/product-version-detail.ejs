@@ -1,0 +1,325 @@
+<%- include('partials/header', { title: productVersion.name }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-box me-2"></i>
+        <%= productVersion.name %>
+    </h1>
+    <div>
+        <a href="/product-versions" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left me-1"></i>
+            Terug
+        </a>
+        <a href="/product-versions/<%= productVersion.id %>/edit" class="btn btn-primary">
+            <i class="fas fa-edit me-1"></i>
+            Bewerken
+        </a>
+    </div>
+</div>
+
+<!-- Product Version Info -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Productversie informatie
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th>Naam:</th>
+                        <td><%= productVersion.name %></td>
+                    </tr>
+                    <tr>
+                        <th>EAN:</th>
+                        <td><%= productVersion.ean || 'Niet ingesteld' %></td>
+                    </tr>
+                    <tr>
+                        <th>Trackingconfiguratie:</th>
+                        <td>
+                            <% 
+                                let badgeClass = '';
+                                let trackingText = '';
+                                switch(productVersion.tracking_mode) {
+                                    case 'none': 
+                                        badgeClass = 'bg-secondary';
+                                        trackingText = 'Geen tracking';
+                                        break;
+                                    case 'imei':
+                                        badgeClass = 'bg-info';
+                                        trackingText = 'IMEI tracking';
+                                        break;
+                                    case 'serial':
+                                        badgeClass = 'bg-warning';
+                                        trackingText = 'Serienummer tracking';
+                                        break;
+                                    case 'both':
+                                        badgeClass = 'bg-success';
+                                        trackingText = 'IMEI + Serienummer tracking';
+                                        break;
+                                }
+                            %>
+                            <span class="badge <%= badgeClass %> fs-6">
+                                <%= trackingText %>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Aangemaakt:</th>
+                        <td><%= new Date(productVersion.created_at).toLocaleString('nl-NL') %></td>
+                    </tr>
+                    <tr>
+                        <th>Laatst bijgewerkt:</th>
+                        <td><%= new Date(productVersion.updated_at).toLocaleString('nl-NL') %></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Voorraad statistieken
+                </h5>
+            </div>
+            <div class="card-body">
+                <% if (productVersion.tracking_mode === 'none') { %>
+                    <div class="row text-center mb-3">
+                        <div class="col-12">
+                            <div class="border rounded p-3 bg-light">
+                                <h3 class="text-primary mb-1"><%= bulkStock.quantity %></h3>
+                                <small class="text-muted">Voorraad (bulk)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bulk Stock Adjustment Form -->
+                    <form method="POST" action="/product-versions/<%= productVersion.id %>/bulk-stock" class="mb-3">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="number" name="quantity_change" class="form-control" placeholder="Wijziging (+ of -)" step="1" required>
+                            </div>
+                            <div class="col-4">
+                                <input type="text" name="note" class="form-control" placeholder="Notitie (optioneel)">
+                            </div>
+                            <div class="col-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-plus-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-muted">Gebruik + voor toevoegen, - voor verkoop/gebruik</small>
+                    </form>
+                <% } else { %>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border rounded p-3">
+                                <h3 class="text-success mb-1"><%= identifiers.filter(i => i.status === 'in_stock').length %></h3>
+                                <small class="text-muted">Op voorraad</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-3">
+                                <h3 class="text-primary mb-1"><%= identifiers.length %></h3>
+                                <small class="text-muted">Totaal identifiers</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">Status verdeling:</small>
+                        <div class="progress" style="height: 20px;">
+                            <% 
+                                const total = identifiers.length;
+                                const inStock = identifiers.filter(i => i.status === 'in_stock').length;
+                                const sold = identifiers.filter(i => i.status === 'sold').length;
+                                const defective = identifiers.filter(i => i.status === 'defective').length;
+                                const missing = identifiers.filter(i => i.status === 'missing').length;
+                                const reserved = identifiers.filter(i => i.status === 'reserved').length;
+                                
+                                const inStockPct = total > 0 ? (inStock / total) * 100 : 0;
+                                const soldPct = total > 0 ? (sold / total) * 100 : 0;
+                                const defectivePct = total > 0 ? (defective / total) * 100 : 0;
+                                const missingPct = total > 0 ? (missing / total) * 100 : 0;
+                                const reservedPct = total > 0 ? (reserved / total) * 100 : 0;
+                            %>
+                            <% if (inStockPct > 0) { %>
+                                <div class="progress-bar bg-success" style="width: <%= inStockPct %>%" title="<%= inStock %> op voorraad"></div>
+                            <% } %>
+                            <% if (soldPct > 0) { %>
+                                <div class="progress-bar bg-primary" style="width: <%= soldPct %>%" title="<%= sold %> verkocht"></div>
+                            <% } %>
+                            <% if (defectivePct > 0) { %>
+                                <div class="progress-bar bg-danger" style="width: <%= defectivePct %>%" title="<%= defective %> defect"></div>
+                            <% } %>
+                            <% if (missingPct > 0) { %>
+                                <div class="progress-bar bg-warning" style="width: <%= missingPct %>%" title="<%= missing %> vermist"></div>
+                            <% } %>
+                            <% if (reservedPct > 0) { %>
+                                <div class="progress-bar bg-info" style="width: <%= reservedPct %>%" title="<%= reserved %> gereserveerd"></div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Stock History -->
+<% if (productVersion.tracking_mode === 'none' && stockHistory.length > 0) { %>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-history me-2"></i>
+                Voorraad historie (laatste 10 wijzigingen)
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Datum</th>
+                            <th>Wijziging</th>
+                            <th>Van</th>
+                            <th>Naar</th>
+                            <th>Door</th>
+                            <th>Notitie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% stockHistory.forEach(history => { %>
+                            <tr>
+                                <td><%= new Date(history.created_at).toLocaleString('nl-NL') %></td>
+                                <td>
+                                    <span class="badge <%= history.change_quantity > 0 ? 'bg-success' : 'bg-danger' %>">
+                                        <%= history.change_quantity > 0 ? '+' : '' %><%= history.change_quantity %>
+                                    </span>
+                                </td>
+                                <td><%= history.old_quantity %></td>
+                                <td><%= history.new_quantity %></td>
+                                <td><%= history.changed_by %></td>
+                                <td><%= history.note || '-' %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<% } %>
+
+<!-- Identifiers List -->
+<% if (productVersion.tracking_mode !== 'none') { %>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>
+                Gekoppelde identifiers (<%= identifiers.length %>)
+            </h5>
+        </div>
+        <div class="card-body">
+            <% if (identifiers.length === 0) { %>
+                <div class="text-center py-5">
+                    <i class="fas fa-barcode fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Geen identifiers gevonden</h5>
+                    <p class="text-muted">Er zijn nog geen identifiers gekoppeld aan deze productversie.</p>
+                </div>
+            <% } else { %>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <% if (productVersion.tracking_mode === 'imei' || productVersion.tracking_mode === 'both') { %>
+                                    <th>IMEI</th>
+                                <% } %>
+                                <% if (productVersion.tracking_mode === 'serial' || productVersion.tracking_mode === 'both') { %>
+                                    <th>Serienummer</th>
+                                <% } %>
+                                <th>Status</th>
+                                <th>Laatste update</th>
+                                <th>Acties</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% identifiers.forEach(identifier => { %>
+                                <tr>
+                                    <td>
+                                        <a href="/identifiers/<%= identifier.id %>" class="text-decoration-none">
+                                            #<%= identifier.id %>
+                                        </a>
+                                    </td>
+                                    <% if (productVersion.tracking_mode === 'imei' || productVersion.tracking_mode === 'both') { %>
+                                        <td>
+                                            <% if (identifier.imei) { %>
+                                                <code><%= identifier.imei %></code>
+                                            <% } else { %>
+                                                <span class="text-muted">-</span>
+                                            <% } %>
+                                        </td>
+                                    <% } %>
+                                    <% if (productVersion.tracking_mode === 'serial' || productVersion.tracking_mode === 'both') { %>
+                                        <td>
+                                            <% if (identifier.serial_number) { %>
+                                                <code><%= identifier.serial_number %></code>
+                                            <% } else { %>
+                                                <span class="text-muted">-</span>
+                                            <% } %>
+                                        </td>
+                                    <% } %>
+                                    <td>
+                                        <% 
+                                            let statusClass = '';
+                                            let statusText = '';
+                                            switch(identifier.status) {
+                                                case 'in_stock':
+                                                    statusClass = 'bg-success';
+                                                    statusText = 'Op voorraad';
+                                                    break;
+                                                case 'sold':
+                                                    statusClass = 'bg-primary';
+                                                    statusText = 'Verkocht';
+                                                    break;
+                                                case 'defective':
+                                                    statusClass = 'bg-danger';
+                                                    statusText = 'Defect';
+                                                    break;
+                                                case 'missing':
+                                                    statusClass = 'bg-warning';
+                                                    statusText = 'Vermist';
+                                                    break;
+                                                case 'reserved':
+                                                    statusClass = 'bg-info';
+                                                    statusText = 'Gereserveerd';
+                                                    break;
+                                            }
+                                        %>
+                                        <span class="badge <%= statusClass %>">
+                                            <%= statusText %>
+                                        </span>
+                                    </td>
+                                    <td><%= new Date(identifier.updated_at).toLocaleDateString('nl-NL') %></td>
+                                    <td>
+                                        <a href="/identifiers/<%= identifier.id %>" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Bekijken
+                                        </a>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+    </div>
+<% } %>
+
+<%- include('partials/footer') %>

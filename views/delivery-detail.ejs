@@ -1,0 +1,337 @@
+<%- include('partials/header', { title: 'Levering ' + delivery.delivery_number }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-truck me-2"></i>
+        Levering <%= delivery.delivery_number %>
+    </h1>
+    <div>
+        <a href="/deliveries" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left me-1"></i>
+            Terug naar overzicht
+        </a>
+        <% if (delivery.status === 'concept') { %>
+            <form method="POST" action="/deliveries/<%= delivery.id %>/book" style="display: inline;">
+                <button type="submit" class="btn btn-success" onclick="return confirm('Weet je zeker dat je deze levering wilt boeken? Dit kan niet ongedaan worden gemaakt.')">
+                    <i class="fas fa-check me-1"></i>
+                    Boek levering
+                </button>
+            </form>
+        <% } %>
+    </div>
+</div>
+
+<!-- Delivery Info -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Levering informatie
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th>Leveringsnummer:</th>
+                        <td><%= delivery.delivery_number %></td>
+                    </tr>
+                    <tr>
+                        <th>Leveringsdatum:</th>
+                        <td><%= new Date(delivery.delivery_date).toLocaleDateString('nl-NL') %></td>
+                    </tr>
+                    <tr>
+                        <th>Leverancier:</th>
+                        <td><%= delivery.supplier || 'Niet opgegeven' %></td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            <% 
+                                let statusClass = '';
+                                let statusText = '';
+                                switch(delivery.status) {
+                                    case 'concept':
+                                        statusClass = 'bg-secondary';
+                                        statusText = 'Concept';
+                                        break;
+                                    case 'booked':
+                                        statusClass = 'bg-success';
+                                        statusText = 'Geboekt';
+                                        break;
+                                    case 'partially_booked':
+                                        statusClass = 'bg-warning';
+                                        statusText = 'Gedeeltelijk geboekt';
+                                        break;
+                                }
+                            %>
+                            <span class="badge <%= statusClass %> fs-6">
+                                <%= statusText %>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Aangemaakt:</th>
+                        <td><%= new Date(delivery.created_at).toLocaleString('nl-NL') %></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Statistieken
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <h3 class="text-primary mb-1"><%= lines.length %></h3>
+                            <small class="text-muted">Productregels</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <h3 class="text-success mb-1">
+                                <%= lines.reduce((sum, line) => sum + line.quantity, 0) %>
+                            </h3>
+                            <small class="text-muted">Totaal stuks</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Product Line -->
+<% if (delivery.status === 'concept') { %>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-plus me-2"></i>
+            Productregel toevoegen
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="/deliveries/<%= delivery.id %>/lines" id="addLineForm">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="product_version_id" class="form-label">Productversie *</label>
+                    <select class="form-select" id="product_version_id" name="product_version_id" required>
+                        <option value="">Selecteer productversie</option>
+                        <% productVersions.forEach(pv => { %>
+                            <option value="<%= pv.id %>" data-tracking="<%= pv.tracking_mode %>">
+                                <%= pv.name %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="quantity" class="form-label">Aantal *</label>
+                    <input 
+                        type="number" 
+                        class="form-control" 
+                        id="quantity" 
+                        name="quantity" 
+                        min="1" 
+                        required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Trackingconfiguratie</label>
+                    <div id="trackingInfo" class="form-text">
+                        Selecteer eerst een productversie
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Toevoegen
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Identifier Fields (shown based on tracking mode) -->
+            <div id="identifierFields" class="mt-3" style="display: none;">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Voer de identifiers in voor de geselecteerde productversie.
+                </div>
+                <div id="identifierInputs"></div>
+            </div>
+        </form>
+    </div>
+</div>
+<% } %>
+
+<!-- Existing Product Lines -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-list me-2"></i>
+            Productregels (<%= lines.length %>)
+        </h5>
+    </div>
+    <div class="card-body">
+        <% if (lines.length === 0) { %>
+            <div class="text-center py-5">
+                <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Geen productregels</h5>
+                <p class="text-muted">Voeg productregels toe aan deze levering.</p>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Productversie</th>
+                            <th>Trackingmodus</th>
+                            <th>Aantal</th>
+                            <th>Toegevoegd</th>
+                            <% if (delivery.status === 'concept') { %>
+                                <th>Acties</th>
+                            <% } %>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% lines.forEach(line => { %>
+                            <tr>
+                                <td>
+                                    <a href="/product-versions/<%= line.product_version_id %>" class="text-decoration-none">
+                                        <%= line.product_version_name %>
+                                    </a>
+                                </td>
+                                <td>
+                                    <% 
+                                        let badgeClass = '';
+                                        let trackingText = '';
+                                        switch(line.tracking_mode) {
+                                            case 'none': 
+                                                badgeClass = 'bg-secondary';
+                                                trackingText = 'Geen tracking';
+                                                break;
+                                            case 'imei':
+                                                badgeClass = 'bg-info';
+                                                trackingText = 'IMEI';
+                                                break;
+                                            case 'serial':
+                                                badgeClass = 'bg-warning';
+                                                trackingText = 'Serienummer';
+                                                break;
+                                            case 'both':
+                                                badgeClass = 'bg-success';
+                                                trackingText = 'IMEI + Serienummer';
+                                                break;
+                                        }
+                                    %>
+                                    <span class="badge <%= badgeClass %>">
+                                        <%= trackingText %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary fs-6">
+                                        <%= line.quantity %> stuks
+                                    </span>
+                                </td>
+                                <td><%= new Date(line.created_at).toLocaleDateString('nl-NL') %></td>
+                                <% if (delivery.status === 'concept') { %>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Verwijderen
+                                        </button>
+                                    </td>
+                                <% } %>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+// Handle product version selection for tracking mode display
+document.getElementById('product_version_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const trackingMode = selectedOption.getAttribute('data-tracking');
+    const trackingInfo = document.getElementById('trackingInfo');
+    const identifierFields = document.getElementById('identifierFields');
+    const quantity = document.getElementById('quantity');
+    
+    if (trackingMode) {
+        let trackingText = '';
+        let showIdentifiers = false;
+        
+        switch(trackingMode) {
+            case 'none':
+                trackingText = 'Geen tracking - identifiers niet vereist';
+                break;
+            case 'imei':
+                trackingText = 'IMEI tracking - IMEI codes vereist';
+                showIdentifiers = true;
+                break;
+            case 'serial':
+                trackingText = 'Serienummer tracking - serienummers vereist';
+                showIdentifiers = true;
+                break;
+            case 'both':
+                trackingText = 'IMEI + Serienummer tracking - beide vereist';
+                showIdentifiers = true;
+                break;
+        }
+        
+        trackingInfo.innerHTML = '<strong>' + trackingText + '</strong>';
+        
+        if (showIdentifiers) {
+            identifierFields.style.display = 'block';
+        } else {
+            identifierFields.style.display = 'none';
+        }
+    } else {
+        trackingInfo.innerHTML = 'Selecteer eerst een productversie';
+        identifierFields.style.display = 'none';
+    }
+});
+
+// Generate identifier input fields based on quantity
+document.getElementById('quantity').addEventListener('input', function() {
+    const quantity = parseInt(this.value) || 0;
+    const productVersionSelect = document.getElementById('product_version_id');
+    const selectedOption = productVersionSelect.options[productVersionSelect.selectedIndex];
+    const trackingMode = selectedOption.getAttribute('data-tracking');
+    const identifierInputs = document.getElementById('identifierInputs');
+    
+    if (quantity > 0 && trackingMode && trackingMode !== 'none') {
+        let html = '';
+        
+        for (let i = 1; i <= quantity; i++) {
+            html += '<div class="row mb-2"><div class="col-md-1"><label class="form-label">' + i + '.</label></div>';
+            
+            if (trackingMode === 'imei' || trackingMode === 'both') {
+                html += '<div class="col-md-5"><input type="text" class="form-control" name="identifiers[' + (i-1) + '][imei]" placeholder="IMEI" required></div>';
+            }
+            
+            if (trackingMode === 'serial' || trackingMode === 'both') {
+                html += '<div class="col-md-5"><input type="text" class="form-control" name="identifiers[' + (i-1) + '][serial_number]" placeholder="Serienummer" required></div>';
+            }
+            
+            html += '</div>';
+        }
+        
+        identifierInputs.innerHTML = html;
+    } else {
+        identifierInputs.innerHTML = '';
+    }
+});
+</script>
+
+<%- include('partials/footer') %>

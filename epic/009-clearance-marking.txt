@@ -1,0 +1,68 @@
+USER STORY: Clearance/Bargain Basement Marking
+
+As a warehouse manager
+I want to mark individual items as clearance products
+So that they can be sold separately at reduced prices with special handling
+
+ACCEPTANCE CRITERIA:
+
+CLEARANCE MARKING FUNCTIONALITY:
+- [ ] "Mark as Clearance" button on identifier detail page (only for in_stock items)
+- [ ] Modal dialog with form fields:
+  - Clearance checkbox (on/off)
+  - Clearance Price field (optional, decimal)
+  - Clearance Reason field (optional text, e.g., "Box damage", "Display model")
+
+CLEARANCE OVERVIEW PAGE:
+- [ ] New navigation item "Clearance Items" or section in inventory
+- [ ] Table showing all items where is_clearance = true:
+  - Product Version Name
+  - IMEI / Serial Number  
+  - Status (should be in_stock)
+  - Original Price vs Clearance Price
+  - Reason
+  - Date Marked
+  - Actions (Remove Clearance Status, Edit)
+
+DATABASE CHANGES:
+- [ ] Add clearance fields to device_identifiers table:
+  - is_clearance (boolean, default false)
+  - clearance_price (decimal, nullable)
+  - clearance_reason (text, nullable)
+  - clearance_date (datetime, nullable)
+
+BUSINESS RULES:  
+- [ ] Only items with status = 'in_stock' can be marked as clearance
+- [ ] Clearance price must be positive if provided
+- [ ] Clearance items maintain their tracking and can still have status changes
+- [ ] Removing clearance status clears all clearance fields
+- [ ] Clearance status is preserved through status changes (except when sold)
+
+CLEARANCE MANAGEMENT:
+- [ ] Remove clearance status functionality
+- [ ] Edit clearance price and reason
+- [ ] Bulk clearance operations (future enhancement hook)
+- [ ] Clearance reporting and statistics
+
+INTEGRATION POINTS:
+- [ ] Show clearance badge/indicator on identifier detail pages
+- [ ] Include clearance info in inventory overviews  
+- [ ] Filter options in identifier search (clearance items only)
+- [ ] Dashboard widget showing clearance items count
+
+UI REQUIREMENTS:
+- [ ] Clear visual indication of clearance items (orange badges, special styling)
+- [ ] Professional clearance management interface
+- [ ] Price formatting and validation
+- [ ] Confirmation dialogs for clearance status changes
+- [ ] Responsive clearance overview table
+
+REPORTING FEATURES:
+- [ ] Clearance items count on dashboard
+- [ ] Average discount percentage
+- [ ] Clearance items by reason/category
+- [ ] Age of clearance items (how long marked)
+
+STORY POINTS: 4
+PRIORITY: Low (Enhancement feature)
+DEPENDENCIES: 006-inventory-overview

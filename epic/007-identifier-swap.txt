@@ -1,0 +1,65 @@
+USER STORY: Identifier Swap (IMEI/Serial Number Change)
+
+As a warehouse operator
+I want to change the IMEI or serial number of a device
+So that I can correct registration errors without losing tracking history
+
+ACCEPTANCE CRITERIA:
+
+IDENTIFIER SWAP FUNCTIONALITY:
+- [ ] "Change Identifier" button on identifier detail page
+- [ ] Modal dialog with form fields:
+  - Current IMEI (read-only, if applicable)
+  - New IMEI (editable, if tracking mode requires)
+  - Current Serial Number (read-only, if applicable)
+  - New Serial Number (editable, if tracking mode requires)
+  - Optional note field for reason
+
+VALIDATION RULES:
+- [ ] New value cannot be identical to current value
+- [ ] New IMEI/Serial must be unique across all identifiers
+- [ ] Only show fields relevant to product version tracking mode:
+  - IMEI tracking: Only IMEI fields
+  - Serial tracking: Only Serial fields  
+  - Both tracking: Both field sets
+- [ ] At least one field must be changed
+- [ ] Required fields based on tracking configuration
+
+SWAP EXECUTION:
+- [ ] Update device_identifiers table with new values
+- [ ] Create entry in identifier_history table:
+  - device_identifier_id
+  - old_imei, new_imei
+  - old_serial_number, new_serial_number
+  - changed_by (current user)
+  - note (optional reason)
+  - timestamp
+
+HISTORY DISPLAY:
+- [ ] Identifier History section on detail page
+- [ ] Table showing all identifier swaps:
+  - Date/Time
+  - Old IMEI → New IMEI (if changed)
+  - Old Serial → New Serial (if changed)
+  - Changed By
+  - Reason/Note
+- [ ] Clear visual indication of what changed
+
+BUSINESS RULES:
+- [ ] Cannot swap to identifiers that already exist
+- [ ] All swaps are logged permanently
+- [ ] Product version and status remain unchanged
+- [ ] User must be logged to perform swaps
+- [ ] Confirmation required before executing swap
+
+UI REQUIREMENTS:
+- [ ] Professional modal dialog
+- [ ] Clear field labeling showing old vs new values
+- [ ] Form validation with helpful error messages
+- [ ] Confirmation dialog with summary of changes
+- [ ] Success message after completion
+- [ ] Updated detail page showing new values and history
+
+STORY POINTS: 5
+PRIORITY: Medium (Correction functionality)
+DEPENDENCIES: 005-identifier-search-and-detail

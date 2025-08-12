@@ -1,0 +1,600 @@
+<%- include('partials/header', { title: 'Identifier Details' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-barcode me-2"></i>
+        Identifier #<%= identifier.id %>
+    </h1>
+    <a href="/identifiers" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>
+        Terug naar overzicht
+    </a>
+</div>
+
+<!-- Error/Success Messages -->
+<% if (typeof error !== 'undefined' && error) { %>
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    <%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<% } %>
+
+<% if (typeof success !== 'undefined' && success) { %>
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i>
+    <%= success %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<% } %>
+
+<!-- Identifier Info -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Identifier informatie
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>IMEI:</th>
+                                <td>
+                                    <% if (identifier.imei) { %>
+                                        <code class="fs-6"><%= identifier.imei %></code>
+                                    <% } else { %>
+                                        <span class="text-muted">Niet van toepassing</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Serienummer:</th>
+                                <td>
+                                    <% if (identifier.serial_number) { %>
+                                        <code class="fs-6"><%= identifier.serial_number %></code>
+                                    <% } else { %>
+                                        <span class="text-muted">Niet van toepassing</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Productversie:</th>
+                                <td>
+                                    <a href="/product-versions/<%= identifier.product_version_id %>" class="text-decoration-none">
+                                        <%= identifier.product_version_name %>
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    <% 
+                                        let statusClass = '';
+                                        let statusText = '';
+                                        switch(identifier.status) {
+                                            case 'in_stock':
+                                                statusClass = 'bg-success';
+                                                statusText = 'Op voorraad';
+                                                break;
+                                            case 'sold':
+                                                statusClass = 'bg-primary';
+                                                statusText = 'Verkocht';
+                                                break;
+                                            case 'defective':
+                                                statusClass = 'bg-danger';
+                                                statusText = 'Defect';
+                                                break;
+                                            case 'missing':
+                                                statusClass = 'bg-warning';
+                                                statusText = 'Vermist';
+                                                break;
+                                            case 'reserved':
+                                                statusClass = 'bg-info';
+                                                statusText = 'Gereserveerd';
+                                                break;
+                                        }
+                                    %>
+                                    <span class="badge <%= statusClass %> fs-6">
+                                        <%= statusText %>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Aangemaakt:</th>
+                                <td><%= new Date(identifier.created_at).toLocaleString('nl-NL') %></td>
+                            </tr>
+                            <tr>
+                                <th>Laatst bijgewerkt:</th>
+                                <td><%= new Date(identifier.updated_at).toLocaleString('nl-NL') %></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    Acties
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#statusModal">
+                        <i class="fas fa-edit me-2"></i>
+                        Status wijzigen
+                    </button>
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#swapModal" <%= identifier.status !== 'in_stock' ? 'disabled title="Alleen mogelijk bij status \'Op voorraad\'"' : '' %>>
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        Identifier wijzigen
+                    </button>
+                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#versionSwapModal" <%= identifier.status !== 'in_stock' ? 'disabled title="Alleen mogelijk bij status \'Op voorraad\'"' : '' %>>
+                        <i class="fas fa-sync me-2"></i>
+                        Productversie wijzigen
+                    </button>
+                    <% if (identifier.status === 'in_stock') { %>
+                        <button type="button" class="btn btn-outline-warning">
+                            <i class="fas fa-tag me-2"></i>
+                            Markeer als koopje
+                        </button>
+                    <% } %>
+                </div>
+                
+                <% if (identifier.status !== 'in_stock') { %>
+                <div class="mt-3">
+                    <div class="alert alert-warning alert-sm">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small><strong>Let op:</strong> Identifier en productversie kunnen alleen gewijzigd worden bij status "Op voorraad".</small>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status History -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-history me-2"></i>
+            Statusgeschiedenis
+        </h5>
+    </div>
+    <div class="card-body">
+        <% if (statusHistory.length === 0) { %>
+            <p class="text-muted">Geen statusgeschiedenis beschikbaar.</p>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Datum/tijd</th>
+                            <th>Oude status</th>
+                            <th>Nieuwe status</th>
+                            <th>Gewijzigd door</th>
+                            <th>Notitie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% statusHistory.forEach(history => { %>
+                            <tr>
+                                <td><%= new Date(history.created_at).toLocaleString('nl-NL') %></td>
+                                <td>
+                                    <% if (history.old_status) { %>
+                                        <span class="badge bg-secondary"><%= history.old_status %></span>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                    <% } %>
+                                </td>
+                                <td><span class="badge bg-primary"><%= history.new_status %></span></td>
+                                <td><%= history.changed_by %></td>
+                                <td><%= history.note || '-' %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Product Version History -->
+<% if (versionHistory.length > 0) { %>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-sync me-2"></i>
+            Productversie geschiedenis
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Datum/tijd</th>
+                        <th>Oude versie</th>
+                        <th>Nieuwe versie</th>
+                        <th>Gewijzigd door</th>
+                        <th>Notitie</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% versionHistory.forEach(history => { %>
+                        <tr>
+                            <td><%= new Date(history.created_at).toLocaleString('nl-NL') %></td>
+                            <td><%= history.old_version_name %></td>
+                            <td><%= history.new_version_name %></td>
+                            <td><%= history.changed_by %></td>
+                            <td><%= history.note || '-' %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<% } %>
+
+<!-- Identifier History -->
+<% if (identifierHistory.length > 0) { %>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-exchange-alt me-2"></i>
+            Identifier geschiedenis
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Datum/tijd</th>
+                        <th>Oud IMEI</th>
+                        <th>Nieuw IMEI</th>
+                        <th>Oud serienummer</th>
+                        <th>Nieuw serienummer</th>
+                        <th>Gewijzigd door</th>
+                        <th>Notitie</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% identifierHistory.forEach(history => { %>
+                        <tr>
+                            <td><%= new Date(history.created_at).toLocaleString('nl-NL') %></td>
+                            <td>
+                                <% if (history.old_imei) { %>
+                                    <code><%= history.old_imei %></code>
+                                <% } else { %>
+                                    <span class="text-muted">-</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (history.new_imei) { %>
+                                    <code><%= history.new_imei %></code>
+                                <% } else { %>
+                                    <span class="text-muted">-</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (history.old_serial_number) { %>
+                                    <code><%= history.old_serial_number %></code>
+                                <% } else { %>
+                                    <span class="text-muted">-</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (history.new_serial_number) { %>
+                                    <code><%= history.new_serial_number %></code>
+                                <% } else { %>
+                                    <span class="text-muted">-</span>
+                                <% } %>
+                            </td>
+                            <td><%= history.changed_by %></td>
+                            <td><%= history.note || '-' %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<% } %>
+
+<!-- Identifier Change Modal -->
+<div class="modal fade" id="swapModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="/identifiers/<%= identifier.id %>/change-identifier">
+                <div class="modal-header">
+                    <h5 class="modal-title">Identifier wijzigen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Trackingconfiguratie:</strong> 
+                        <%= identifier.tracking_mode === 'both' ? 'IMEI + Serienummer' : 
+                            identifier.tracking_mode === 'imei' ? 'IMEI' : 
+                            identifier.tracking_mode === 'serial' ? 'Serienummer' : 'Geen tracking' %>
+                    </div>
+                    
+                    <!-- Current Values -->
+                    <div class="mb-3">
+                        <label class="form-label">Huidige waarden (alleen-lezen)</label>
+                        <div class="row g-2">
+                            <% if (identifier.tracking_mode === 'imei' || identifier.tracking_mode === 'both') { %>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" value="<%= identifier.imei || 'Niet ingesteld' %>" readonly>
+                                    <small class="form-text text-muted">Huidige IMEI</small>
+                                </div>
+                            <% } %>
+                            <% if (identifier.tracking_mode === 'serial' || identifier.tracking_mode === 'both') { %>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" value="<%= identifier.serial_number || 'Niet ingesteld' %>" readonly>
+                                    <small class="form-text text-muted">Huidig serienummer</small>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- New Values -->
+                    <div class="row g-3">
+                        <% if (identifier.tracking_mode === 'imei' || identifier.tracking_mode === 'both') { %>
+                            <div class="col-md-6">
+                                <label for="new_imei" class="form-label">
+                                    Nieuw IMEI 
+                                    <% if (identifier.tracking_mode === 'imei' || identifier.tracking_mode === 'both') { %>
+                                        <span class="text-danger">*</span>
+                                    <% } %>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="new_imei" 
+                                    name="new_imei" 
+                                    placeholder="Voer nieuw IMEI in"
+                                    <%= (identifier.tracking_mode === 'imei' || identifier.tracking_mode === 'both') ? 'required' : '' %>>
+                            </div>
+                        <% } %>
+                        <% if (identifier.tracking_mode === 'serial' || identifier.tracking_mode === 'both') { %>
+                            <div class="col-md-6">
+                                <label for="new_serial_number" class="form-label">
+                                    Nieuw serienummer 
+                                    <% if (identifier.tracking_mode === 'serial' || identifier.tracking_mode === 'both') { %>
+                                        <span class="text-danger">*</span>
+                                    <% } %>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="new_serial_number" 
+                                    name="new_serial_number" 
+                                    placeholder="Voer nieuw serienummer in"
+                                    <%= (identifier.tracking_mode === 'serial' || identifier.tracking_mode === 'both') ? 'required' : '' %>>
+                            </div>
+                        <% } %>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <label for="change_note" class="form-label">Notitie (optioneel)</label>
+                        <textarea class="form-control" id="change_note" name="note" rows="3" placeholder="Reden voor wijziging..."></textarea>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Nieuwe waarden moeten verschillen van de huidige waarden en mogen niet al bestaan bij een andere identifier.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                    <button type="submit" class="btn btn-warning">Identifier wijzigen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Status Change Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="/identifiers/<%= identifier.id %>/status">
+                <div class="modal-header">
+                    <h5 class="modal-title">Status wijzigen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="new_status" class="form-label">Nieuwe status</label>
+                        <select class="form-select" id="new_status" name="new_status" required>
+                            <option value="">Selecteer nieuwe status</option>
+                            <option value="in_stock" <%= identifier.status === 'in_stock' ? 'disabled' : '' %>>Op voorraad</option>
+                            <option value="sold" <%= identifier.status === 'sold' ? 'disabled' : '' %>>Verkocht</option>
+                            <option value="defective" <%= identifier.status === 'defective' ? 'disabled' : '' %>>Defect</option>
+                            <option value="missing" <%= identifier.status === 'missing' ? 'disabled' : '' %>>Vermist</option>
+                            <option value="reserved" <%= identifier.status === 'reserved' ? 'disabled' : '' %>>Gereserveerd</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="note" class="form-label">Notitie (optioneel)</label>
+                        <textarea class="form-control" id="note" name="note" rows="3" placeholder="Reden voor statuswijziging..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                    <button type="submit" class="btn btn-primary">Status wijzigen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Product Version Change Modal -->
+<div class="modal fade" id="versionSwapModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="/identifiers/<%= identifier.id %>/change-product-version">
+                <div class="modal-header">
+                    <h5 class="modal-title">Productversie wijzigen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Let op:</strong> De identifiers (IMEI/serienummer) blijven behouden. Alleen productversies met dezelfde trackingconfiguratie kunnen worden geselecteerd.
+                    </div>
+                    
+                    <!-- Current Product Version -->
+                    <div class="mb-3">
+                        <label class="form-label">Huidige productversie (alleen-lezen)</label>
+                        <input type="text" class="form-control" value="<%= identifier.product_version_name %>" readonly>
+                    </div>
+
+                    <!-- New Product Version -->
+                    <div class="mb-3">
+                        <label for="new_product_version_id" class="form-label">Nieuwe productversie <span class="text-danger">*</span></label>
+                        <select class="form-select" id="new_product_version_id" name="new_product_version_id" required>
+                            <option value="">Selecteer nieuwe productversie</option>
+                            <% 
+                            const compatibleVersions = productVersions.filter(pv => 
+                                pv.id !== identifier.product_version_id && 
+                                pv.tracking_mode === identifier.tracking_mode
+                            );
+                            %>
+                            <% if (compatibleVersions.length === 0) { %>
+                                <option value="" disabled>Geen compatibele productversies beschikbaar</option>
+                            <% } else { %>
+                                <% compatibleVersions.forEach(pv => { %>
+                                    <option value="<%= pv.id %>" data-tracking="<%= pv.tracking_mode %>">
+                                        <%= pv.name %> 
+                                        <% if (pv.ean) { %>(EAN: <%= pv.ean %>)<% } %>
+                                        - <%= pv.tracking_mode === 'both' ? 'IMEI + Serienummer' : 
+                                              pv.tracking_mode === 'imei' ? 'IMEI' : 
+                                              pv.tracking_mode === 'serial' ? 'Serienummer' : 'Geen tracking' %>
+                                    </option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                        <small class="form-text text-muted">Alleen productversies met dezelfde trackingconfiguratie (<%= identifier.tracking_mode === 'both' ? 'IMEI + Serienummer' : identifier.tracking_mode === 'imei' ? 'IMEI' : identifier.tracking_mode === 'serial' ? 'Serienummer' : 'Geen tracking' %>) worden weergegeven.</small>
+                    </div>
+                    
+                    <!-- No Compatible Versions Warning -->
+                    <% if (compatibleVersions.length === 0) { %>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Geen compatibele productversies:</strong> Er zijn geen andere productversies met dezelfde trackingconfiguratie beschikbaar.
+                    </div>
+                    <% } %>
+                    
+                    <!-- Note -->
+                    <div class="mb-3">
+                        <label for="version_note" class="form-label">Notitie (optioneel)</label>
+                        <textarea class="form-control" id="version_note" name="note" rows="3" placeholder="Reden voor productversie wijziging..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                    <button type="submit" class="btn btn-info" <%= compatibleVersions.length === 0 ? 'disabled' : '' %>>Productversie wijzigen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add client-side validation for identifier change form
+document.getElementById('swapModal')?.addEventListener('show.bs.modal', function() {
+    // Clear previous values when modal opens
+    const form = this.querySelector('form');
+    form.reset();
+});
+
+// Handle form submission with better error handling
+document.querySelector('#swapModal form')?.addEventListener('submit', function(e) {
+    const newImeiEl = document.getElementById('new_imei');
+    const newSerialEl = document.getElementById('new_serial_number');
+    const newImei = newImeiEl?.value.trim() || '';
+    const newSerial = newSerialEl?.value.trim() || '';
+    const currentImei = '<%= identifier.imei || "" %>';
+    const currentSerial = '<%= identifier.serial_number || "" %>';
+    const trackingMode = '<%= identifier.tracking_mode %>';
+    
+    // Check if at least one required field is provided based on tracking mode
+    let hasValidInput = false;
+    
+    if (trackingMode === 'imei' || trackingMode === 'both') {
+        if (newImei && newImei !== currentImei) {
+            hasValidInput = true;
+        } else if ((trackingMode === 'imei') && !newImei) {
+            e.preventDefault();
+            alert('IMEI is verplicht voor deze trackingconfiguratie.');
+            return false;
+        }
+    }
+    
+    if (trackingMode === 'serial' || trackingMode === 'both') {
+        if (newSerial && newSerial !== currentSerial) {
+            hasValidInput = true;
+        } else if ((trackingMode === 'serial') && !newSerial) {
+            e.preventDefault();
+            alert('Serienummer is verplicht voor deze trackingconfiguratie.');
+            return false;
+        }
+    }
+    
+    // Check if both values are identical to current (no change)
+    if ((trackingMode === 'both') && newImei === currentImei && newSerial === currentSerial) {
+        e.preventDefault();
+        alert('Nieuwe waarden moeten verschillen van de huidige waarden.');
+        return false;
+    }
+    
+    // For single tracking modes, check if the value is the same
+    if ((trackingMode === 'imei') && newImei === currentImei) {
+        e.preventDefault();
+        alert('Nieuw IMEI moet verschillen van het huidige IMEI.');
+        return false;
+    }
+    
+    if ((trackingMode === 'serial') && newSerial === currentSerial) {
+        e.preventDefault();
+        alert('Nieuw serienummer moet verschillen van het huidige serienummer.');
+        return false;
+    }
+    
+    if (!hasValidInput) {
+        e.preventDefault();
+        alert('Voer een nieuwe waarde in die verschilt van de huidige waarde.');
+        return false;
+    }
+});
+
+// Product version change modal validation
+document.getElementById('versionSwapModal')?.addEventListener('show.bs.modal', function() {
+    const form = this.querySelector('form');
+    form.reset();
+});
+
+// No additional validation needed - dropdown is pre-filtered for compatible versions only
+</script>
+
+<%- include('partials/footer') %>

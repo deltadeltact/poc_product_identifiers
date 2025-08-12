@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm run init-db:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(npm start)",
+      "Bash(taskkill:*)",
+      "Bash(sqlite3:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

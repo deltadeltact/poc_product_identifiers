@@ -1,0 +1,102 @@
+<%- include('partials/header', { title: 'Leveringen' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-truck me-2"></i>
+        Leveringen
+    </h1>
+    <a href="/deliveries/new" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>
+        Nieuwe levering
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <% if (deliveries.length === 0) { %>
+            <div class="text-center py-5">
+                <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Geen leveringen gevonden</h5>
+                <p class="text-muted">Maak je eerste levering aan om voorraad in te boeken.</p>
+                <a href="/deliveries/new" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Nieuwe levering
+                </a>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Leveringsnummer</th>
+                            <th>Leveringsdatum</th>
+                            <th>Leverancier</th>
+                            <th>Aantal regels</th>
+                            <th>Totaal stuks</th>
+                            <th>Status</th>
+                            <th>Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% deliveries.forEach(delivery => { %>
+                            <tr>
+                                <td>
+                                    <a href="/deliveries/<%= delivery.id %>" class="text-decoration-none">
+                                        <strong><%= delivery.delivery_number %></strong>
+                                    </a>
+                                </td>
+                                <td><%= new Date(delivery.delivery_date).toLocaleDateString('nl-NL') %></td>
+                                <td><%= delivery.supplier || '-' %></td>
+                                <td>
+                                    <span class="badge bg-outline-secondary">
+                                        <%= delivery.line_count || 0 %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-outline-primary">
+                                        <%= delivery.total_quantity || 0 %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% 
+                                        let statusClass = '';
+                                        let statusText = '';
+                                        switch(delivery.status) {
+                                            case 'concept':
+                                                statusClass = 'bg-secondary';
+                                                statusText = 'Concept';
+                                                break;
+                                            case 'booked':
+                                                statusClass = 'bg-success';
+                                                statusText = 'Geboekt';
+                                                break;
+                                            case 'partially_booked':
+                                                statusClass = 'bg-warning';
+                                                statusText = 'Gedeeltelijk geboekt';
+                                                break;
+                                        }
+                                    %>
+                                    <span class="badge <%= statusClass %>">
+                                        <%= statusText %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/deliveries/<%= delivery.id %>" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-eye"></i> Bekijken
+                                    </a>
+                                    <% if (delivery.status === 'concept') { %>
+                                        <button class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i> Bewerken
+                                        </button>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('partials/footer') %>
