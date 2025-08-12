@@ -250,6 +250,97 @@
                                     </td>
                                 <% } %>
                             </tr>
+                            <!-- Show identifiers for this line if they exist -->
+                            <% if (line.identifiers && line.identifiers.length > 0) { %>
+                                <tr>
+                                    <td colspan="<%= delivery.status === 'concept' ? 5 : 4 %>" class="p-0">
+                                        <div class="bg-light p-3 ms-4">
+                                            <h6 class="mb-2">
+                                                <i class="fas fa-barcode me-2"></i>
+                                                Geregistreerde identifiers (<%= line.identifiers.length %>) - Levering <%= delivery.delivery_number %>:
+                                            </h6>
+                                            <div class="row">
+                                                <% line.identifiers.forEach(identifier => { %>
+                                                    <div class="col-md-6 mb-2">
+                                                        <div class="card">
+                                                            <div class="card-body p-2">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <% if (identifier.original_imei) { %>
+                                                                            <small class="text-muted">IMEI:</small>
+                                                                            <code class="text-primary"><%= identifier.original_imei %></code>
+                                                                            <% if (identifier.is_swapped && identifier.imei !== identifier.original_imei) { %>
+                                                                                <i class="fas fa-exclamation-triangle text-warning ms-1" 
+                                                                                   title="Deze IMEI is gewijzigd naar: <%= identifier.imei %>" 
+                                                                                   data-bs-toggle="tooltip"></i>
+                                                                            <% } %>
+                                                                            <br>
+                                                                        <% } %>
+                                                                        <% if (identifier.original_serial_number) { %>
+                                                                            <small class="text-muted">Serienummer:</small>
+                                                                            <code class="text-success"><%= identifier.original_serial_number %></code>
+                                                                            <% if (identifier.is_swapped && identifier.serial_number !== identifier.original_serial_number) { %>
+                                                                                <i class="fas fa-exclamation-triangle text-warning ms-1" 
+                                                                                   title="Dit serienummer is gewijzigd naar: <%= identifier.serial_number %>" 
+                                                                                   data-bs-toggle="tooltip"></i>
+                                                                            <% } %>
+                                                                        <% } %>
+                                                                    </div>
+                                                                    <div class="text-end">
+                                                                        <% 
+                                                                            let statusBadgeClass = '';
+                                                                            let statusText = '';
+                                                                            switch(identifier.status) {
+                                                                                case 'in_stock':
+                                                                                    statusBadgeClass = 'bg-success';
+                                                                                    statusText = 'Op voorraad';
+                                                                                    break;
+                                                                                case 'sold':
+                                                                                    statusBadgeClass = 'bg-primary';
+                                                                                    statusText = 'Verkocht';
+                                                                                    break;
+                                                                                case 'defective':
+                                                                                    statusBadgeClass = 'bg-danger';
+                                                                                    statusText = 'Defect';
+                                                                                    break;
+                                                                                case 'missing':
+                                                                                    statusBadgeClass = 'bg-warning';
+                                                                                    statusText = 'Vermist';
+                                                                                    break;
+                                                                                case 'reserved':
+                                                                                    statusBadgeClass = 'bg-info';
+                                                                                    statusText = 'Gereserveerd';
+                                                                                    break;
+                                                                            }
+                                                                        %>
+                                                                        <span class="badge <%= statusBadgeClass %>">
+                                                                            <%= statusText %>
+                                                                        </span><br>
+                                                                        <a href="/identifiers/<%= identifier.id %>" class="btn btn-outline-primary btn-sm mt-1">
+                                                                            <i class="fas fa-eye"></i> Bekijk
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <% }); %>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } else if (line.tracking_mode !== 'none') { %>
+                                <tr>
+                                    <td colspan="<%= delivery.status === 'concept' ? 5 : 4 %>" class="p-0">
+                                        <div class="bg-light p-3 ms-4 text-muted">
+                                            <small>
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                Geen identifiers gevonden voor deze productversie in deze levering.
+                                            </small>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
                         <% }); %>
                     </tbody>
                 </table>
@@ -331,6 +422,14 @@ document.getElementById('quantity').addEventListener('input', function() {
     } else {
         identifierInputs.innerHTML = '';
     }
+});
+
+// Initialize Bootstrap tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 });
 </script>
 

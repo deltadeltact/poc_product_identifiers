@@ -41,59 +41,75 @@ db.serialize(() => {
         (6, 'Screen Protector Premium', '6789012345678', 'none')
     `);
 
-    // Add individual identifiers for tracked products (phones and electronics)
-    db.run(`INSERT INTO device_identifiers (product_version_id, imei, serial_number, status) VALUES 
-        -- iPhone 15 Pro (IMEI tracking)
-        (1, '351234567890001', NULL, 'in_stock'),
+    // Add deliveries with specific timestamps
+    db.run(`INSERT INTO deliveries (id, delivery_number, delivery_date, supplier, status, created_at, updated_at) VALUES 
+        (1, 'WS0001', '2025-08-10', 'Apple Inc.', 'booked', '2025-08-10 09:00:00', '2025-08-10 09:00:00'),
+        (2, 'WS0002', '2025-08-11', 'Samsung Electronics', 'booked', '2025-08-11 10:30:00', '2025-08-11 10:30:00'),
+        (3, 'WS0003', '2025-08-11', 'Apple Inc.', 'booked', '2025-08-11 14:15:00', '2025-08-11 14:15:00'),
+        (4, 'WS0004', '2025-08-12', 'Samsung Electronics', 'booked', '2025-08-12 08:45:00', '2025-08-12 08:45:00'),
+        (5, 'WS0005', '2025-08-12', 'Accessory Supplier', 'booked', '2025-08-12 11:20:00', '2025-08-12 11:20:00'),
+        (6, 'WS0006', '2025-08-12', 'Screen Protection Co.', 'booked', '2025-08-12 13:10:00', '2025-08-12 13:10:00')
+    `);
+
+    // Add delivery lines with more realistic quantities
+    db.run(`INSERT INTO delivery_lines (delivery_id, product_version_id, quantity, created_at) VALUES 
+        (1, 1, 3, '2025-08-10 09:05:00'),  -- WS0001: 3x iPhone 15 Pro 128GB
+        (2, 2, 2, '2025-08-11 10:35:00'),  -- WS0002: 2x Samsung Galaxy S24 Ultra
+        (3, 3, 4, '2025-08-11 14:20:00'),  -- WS0003: 4x AirPods Pro 2nd Gen
+        (4, 4, 2, '2025-08-12 08:50:00'),  -- WS0004: 2x Samsung Galaxy Watch 6
+        (5, 5, 10, '2025-08-12 11:25:00'), -- WS0005: 10x Phone Case Clear
+        (6, 6, 15, '2025-08-12 13:15:00')  -- WS0006: 15x Screen Protector Premium
+    `);
+
+    // Add individual identifiers for tracked products with delivery_id references
+    db.run(`INSERT INTO device_identifiers (product_version_id, delivery_id, imei, serial_number, original_imei, original_serial_number, status, created_at, updated_at) VALUES 
+        -- iPhone 15 Pro (IMEI tracking) - Delivery WS0001 (delivery_id = 1)
+        (1, 1, '351234567890001', NULL, '351234567890001', NULL, 'in_stock', '2025-08-10 09:10:00', '2025-08-10 09:10:00'),
+        (1, 1, '351234567890002', NULL, '351234567890002', NULL, 'in_stock', '2025-08-10 09:11:00', '2025-08-10 09:11:00'),
+        (1, 1, '351234567890003', NULL, '351234567890003', NULL, 'sold', '2025-08-10 09:12:00', '2025-08-11 15:30:00'),
         
-        -- Samsung Galaxy S24 Ultra (IMEI tracking)  
-        (2, '351234567890002', NULL, 'in_stock'),
+        -- Samsung Galaxy S24 Ultra (IMEI tracking) - Delivery WS0002 (delivery_id = 2)
+        (2, 2, '351876543210001', NULL, '351876543210001', NULL, 'in_stock', '2025-08-11 10:40:00', '2025-08-11 10:40:00'),
+        (2, 2, '351876543210002', NULL, '351876543210002', NULL, 'in_stock', '2025-08-11 10:41:00', '2025-08-11 10:41:00'),
         
-        -- AirPods Pro (Serial tracking)
-        (3, NULL, 'AP2024001', 'in_stock'),
+        -- AirPods Pro (Serial tracking) - Delivery WS0003 (delivery_id = 3)
+        (3, 3, NULL, 'AP2024001', NULL, 'AP2024001', 'in_stock', '2025-08-11 14:25:00', '2025-08-11 14:25:00'),
+        (3, 3, NULL, 'AP2024002', NULL, 'AP2024002', 'in_stock', '2025-08-11 14:26:00', '2025-08-11 14:26:00'),
+        (3, 3, NULL, 'AP2024003', NULL, 'AP2024003', 'sold', '2025-08-11 14:27:00', '2025-08-12 10:15:00'),
+        (3, 3, NULL, 'AP2024004', NULL, 'AP2024004', 'in_stock', '2025-08-11 14:28:00', '2025-08-11 14:28:00'),
         
-        -- Galaxy Watch (Serial tracking)
-        (4, NULL, 'GW2024001', 'in_stock')
+        -- Galaxy Watch (Serial tracking) - Delivery WS0004 (delivery_id = 4)
+        (4, 4, NULL, 'GW2024001', NULL, 'GW2024001', 'in_stock', '2025-08-12 08:55:00', '2025-08-12 08:55:00'),
+        (4, 4, NULL, 'GW2024002', NULL, 'GW2024002', 'in_stock', '2025-08-12 08:56:00', '2025-08-12 08:56:00')
     `);
 
     // Add bulk stock for non-tracked products (accessories)
-    db.run(`INSERT INTO bulk_stock (product_version_id, quantity) VALUES 
-        (5, 1),  -- Phone Case Clear: 1 piece
-        (6, 1)   -- Screen Protector Premium: 1 piece  
+    db.run(`INSERT INTO bulk_stock (product_version_id, quantity, created_at, updated_at) VALUES 
+        (5, 10, '2025-08-12 11:30:00', '2025-08-12 11:30:00'),  -- Phone Case Clear: 10 pieces
+        (6, 15, '2025-08-12 13:20:00', '2025-08-12 13:20:00')   -- Screen Protector Premium: 15 pieces  
     `);
 
     // Add initial status history for tracked identifiers
-    db.run(`INSERT INTO status_history (device_identifier_id, old_status, new_status, changed_by, note) VALUES 
-        (1, NULL, 'in_stock', 'system', 'Initial stock'),
-        (2, NULL, 'in_stock', 'system', 'Initial stock'),
-        (3, NULL, 'in_stock', 'system', 'Initial stock'),
-        (4, NULL, 'in_stock', 'system', 'Initial stock')
+    db.run(`INSERT INTO status_history (device_identifier_id, old_status, new_status, changed_by, note, created_at) VALUES 
+        (1, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001', '2025-08-10 09:10:00'),
+        (2, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001', '2025-08-10 09:11:00'),
+        (3, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001', '2025-08-10 09:12:00'),
+        (3, 'in_stock', 'sold', 'admin', 'Verkocht aan klant', '2025-08-11 15:30:00'),
+        (4, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002', '2025-08-11 10:40:00'),
+        (5, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002', '2025-08-11 10:41:00'),
+        (6, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0003', '2025-08-11 14:25:00'),
+        (7, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0003', '2025-08-11 14:26:00'),
+        (8, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0003', '2025-08-11 14:27:00'),
+        (8, 'in_stock', 'sold', 'admin', 'Verkocht aan klant', '2025-08-12 10:15:00'),
+        (9, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0003', '2025-08-11 14:28:00'),
+        (10, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0004', '2025-08-12 08:55:00'),
+        (11, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0004', '2025-08-12 08:56:00')
     `);
 
     // Add initial bulk stock history for non-tracked products
-    db.run(`INSERT INTO bulk_stock_history (product_version_id, old_quantity, new_quantity, change_quantity, changed_by, note) VALUES 
-        (5, 0, 1, 1, 'system', 'Initial stock'),
-        (6, 0, 1, 1, 'system', 'Initial stock')
-    `);
-
-    // Add deliveries for each product
-    db.run(`INSERT INTO deliveries (id, delivery_number, delivery_date, supplier, status) VALUES 
-        (1, 'WS0001', '2025-08-12', 'Apple Inc.', 'booked'),
-        (2, 'WS0002', '2025-08-12', 'Samsung Electronics', 'booked'),
-        (3, 'WS0003', '2025-08-12', 'Apple Inc.', 'booked'),
-        (4, 'WS0004', '2025-08-12', 'Samsung Electronics', 'booked'),
-        (5, 'WS0005', '2025-08-12', 'Accessory Supplier', 'booked'),
-        (6, 'WS0006', '2025-08-12', 'Screen Protection Co.', 'booked')
-    `);
-
-    // Add delivery lines for each product (1 quantity each)
-    db.run(`INSERT INTO delivery_lines (delivery_id, product_version_id, quantity) VALUES 
-        (1, 1, 1),  -- WS0001: iPhone 15 Pro 128GB
-        (2, 2, 1),  -- WS0002: Samsung Galaxy S24 Ultra
-        (3, 3, 1),  -- WS0003: AirPods Pro 2nd Gen
-        (4, 4, 1),  -- WS0004: Samsung Galaxy Watch 6
-        (5, 5, 1),  -- WS0005: Phone Case Clear
-        (6, 6, 1)   -- WS0006: Screen Protector Premium
+    db.run(`INSERT INTO bulk_stock_history (product_version_id, old_quantity, new_quantity, change_quantity, changed_by, note, created_at) VALUES 
+        (5, 0, 10, 10, 'system', 'Ingeboekt via levering WS0005', '2025-08-12 11:30:00'),
+        (6, 0, 15, 15, 'system', 'Ingeboekt via levering WS0006', '2025-08-12 13:20:00')
     `);
 
     console.log('New seed data created successfully!');
@@ -102,15 +118,26 @@ db.serialize(() => {
     console.log('- Phones (IMEI tracking): iPhone 15 Pro, Samsung Galaxy S24 Ultra');
     console.log('- Electronics (Serial tracking): AirPods Pro, Galaxy Watch 6');
     console.log('- Accessories (No tracking): Phone Case, Screen Protector');
-    console.log('- Each product has 1 unit in stock');
     console.log('');
-    console.log('Deliveries created:');
-    console.log('- WS0001: iPhone 15 Pro from Apple Inc.');
-    console.log('- WS0002: Samsung Galaxy S24 Ultra from Samsung Electronics');
-    console.log('- WS0003: AirPods Pro from Apple Inc.');
-    console.log('- WS0004: Galaxy Watch 6 from Samsung Electronics');
-    console.log('- WS0005: Phone Case from Accessory Supplier');
-    console.log('- WS0006: Screen Protector from Screen Protection Co.');
+    console.log('Deliveries created with identifiers:');
+    console.log('- WS0001 (2025-08-10): 3x iPhone 15 Pro from Apple Inc.');
+    console.log('  └─ IMEI: 351234567890001, 351234567890002, 351234567890003 (sold)');
+    console.log('- WS0002 (2025-08-11): 2x Samsung Galaxy S24 Ultra from Samsung Electronics');
+    console.log('  └─ IMEI: 351876543210001, 351876543210002');
+    console.log('- WS0003 (2025-08-11): 4x AirPods Pro from Apple Inc.');
+    console.log('  └─ Serial: AP2024001, AP2024002, AP2024003 (sold), AP2024004');
+    console.log('- WS0004 (2025-08-12): 2x Galaxy Watch 6 from Samsung Electronics');
+    console.log('  └─ Serial: GW2024001, GW2024002');
+    console.log('- WS0005 (2025-08-12): 10x Phone Case from Accessory Supplier (bulk stock)');
+    console.log('- WS0006 (2025-08-12): 15x Screen Protector from Screen Protection Co. (bulk stock)');
+    console.log('');
+    console.log('Stock status:');
+    console.log('- 2x iPhone 15 Pro in stock, 1x sold');
+    console.log('- 2x Samsung Galaxy S24 Ultra in stock');
+    console.log('- 3x AirPods Pro in stock, 1x sold');
+    console.log('- 2x Galaxy Watch 6 in stock');
+    console.log('- 10x Phone Case in bulk stock');
+    console.log('- 15x Screen Protector in bulk stock');
 });
 
 db.close((err) => {

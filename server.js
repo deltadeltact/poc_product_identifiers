@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
+const PORT = 3004;
 
 // Database connection
 const dbPath = path.join(__dirname, 'database.sqlite');
@@ -224,9 +224,11 @@ app.get('/identifiers/:id', (req, res) => {
     
     // Get identifier details
     db.get(`
-        SELECT di.*, pv.name as product_version_name, pv.tracking_mode
+        SELECT di.*, pv.name as product_version_name, pv.tracking_mode,
+               d.delivery_number, d.supplier, d.delivery_date
         FROM device_identifiers di
         JOIN product_versions pv ON di.product_version_id = pv.id
+        LEFT JOIN deliveries d ON di.delivery_id = d.id
         WHERE di.id = ?
     `, [identifierId], (err, identifier) => {
         if (err) {
@@ -680,18 +682,56 @@ app.get('/deliveries/:id', (req, res) => {
                 return res.status(500).json({ error: err.message });
             }
             
-            // Get all product versions for adding new lines
-            db.all(`SELECT * FROM product_versions ORDER BY name`, (err, productVersions) => {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({ error: err.message });
-                }
-                
-                res.render('delivery-detail', { 
-                    delivery: delivery, 
-                    lines: lines,
-                    productVersions: productVersions
+            // Get identifiers for each line that was registered with this delivery
+            const linePromises = lines.map(line => {
+                return new Promise((resolve, reject) => {
+                    if (line.tracking_mode === 'none') {
+                        line.identifiers = [];
+                        resolve(line);
+                    } else {
+                        db.all(`
+                            SELECT di.id, di.imei, di.serial_number, di.original_imei, di.original_serial_number, 
+                                   di.status, di.created_at, d.delivery_number,
+                                   CASE 
+                                       WHEN (di.imei != di.original_imei AND di.original_imei IS NOT NULL) 
+                                         OR (di.serial_number != di.original_serial_number AND di.original_serial_number IS NOT NULL)
+                                       THEN 1 
+                                       ELSE 0 
+                                   END as is_swapped
+                            FROM device_identifiers di
+                            LEFT JOIN deliveries d ON di.delivery_id = d.id
+                            WHERE di.delivery_id = ? 
+                            AND di.product_version_id = ?
+                            ORDER BY di.created_at
+                        `, [deliveryId, line.product_version_id], (err, identifiers) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                line.identifiers = identifiers || [];
+                                resolve(line);
+                            }
+                        });
+                    }
                 });
+            });
+
+            Promise.all(linePromises).then(linesWithIdentifiers => {
+                // Get all product versions for adding new lines
+                db.all(`SELECT * FROM product_versions ORDER BY name`, (err, productVersions) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ error: err.message });
+                    }
+                    
+                    res.render('delivery-detail', { 
+                        delivery: delivery, 
+                        lines: linesWithIdentifiers,
+                        productVersions: productVersions
+                    });
+                });
+            }).catch(err => {
+                console.error(err);
+                return res.status(500).json({ error: err.message });
             });
         });
     });
@@ -753,13 +793,15 @@ app.post('/deliveries/:id/lines', (req, res) => {
                 // For tracked items, add individual identifiers
                 if (identifiers && Array.isArray(identifiers) && identifiers.length > 0) {
                     const stmt = db.prepare(`
-                        INSERT INTO device_identifiers (product_version_id, imei, serial_number, status)
-                        VALUES (?, ?, ?, 'in_stock')
+                        INSERT INTO device_identifiers (product_version_id, delivery_id, imei, serial_number, original_imei, original_serial_number, status)
+                        VALUES (?, ?, ?, ?, ?, ?, 'in_stock')
                     `);
                     
                     identifiers.forEach(identifier => {
                         if (identifier && (identifier.imei || identifier.serial_number)) {
-                            stmt.run([product_version_id, identifier.imei || null, identifier.serial_number || null]);
+                            const imei = identifier.imei || null;
+                            const serialNumber = identifier.serial_number || null;
+                            stmt.run([product_version_id, deliveryId, imei, serialNumber, imei, serialNumber]);
                         }
                     });
                     

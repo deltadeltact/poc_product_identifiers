@@ -9,7 +9,9 @@
       "Bash(taskkill:*)",
       "Bash(sqlite3:*)",
       "Bash(node:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(del database.sqlite)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

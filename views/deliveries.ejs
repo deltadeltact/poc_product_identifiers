@@ -48,12 +48,12 @@
                                 <td><%= new Date(delivery.delivery_date).toLocaleDateString('nl-NL') %></td>
                                 <td><%= delivery.supplier || '-' %></td>
                                 <td>
-                                    <span class="badge bg-outline-secondary">
+                                    <span class="badge bg-secondary">
                                         <%= delivery.line_count || 0 %>
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-outline-primary">
+                                    <span class="badge bg-primary">
                                         <%= delivery.total_quantity || 0 %>
                                     </span>
                                 </td>

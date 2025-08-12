@@ -1,65 +1,65 @@
-USER STORY: Identifier Swap (IMEI/Serial Number Change)
+USER STORY: Identifier Swap (IMEI/Serienummer Wijziging)
 
-As a warehouse operator
-I want to change the IMEI or serial number of a device
-So that I can correct registration errors without losing tracking history
+Als magazijnmedewerker
+Wil ik de IMEI of serienummer van een apparaat wijzigen
+Zodat ik registratiefouten kan corrigeren zonder tracking geschiedenis te verliezen
 
-ACCEPTANCE CRITERIA:
+ACCEPTATIECRITERIA:
 
-IDENTIFIER SWAP FUNCTIONALITY:
-- [ ] "Change Identifier" button on identifier detail page
-- [ ] Modal dialog with form fields:
-  - Current IMEI (read-only, if applicable)
-  - New IMEI (editable, if tracking mode requires)
-  - Current Serial Number (read-only, if applicable)
-  - New Serial Number (editable, if tracking mode requires)
-  - Optional note field for reason
+IDENTIFIER SWAP FUNCTIONALITEIT:
+- [ ] "Identifier Wijzigen" knop op identifier detailpagina
+- [ ] Modal dialoog met formulier velden:
+  - Huidige IMEI (alleen-lezen, indien van toepassing)
+  - Nieuwe IMEI (bewerkbaar, als tracking modus vereist)
+  - Huidig Serienummer (alleen-lezen, indien van toepassing)
+  - Nieuw Serienummer (bewerkbaar, als tracking modus vereist)
+  - Optioneel notitie veld voor reden
 
-VALIDATION RULES:
-- [ ] New value cannot be identical to current value
-- [ ] New IMEI/Serial must be unique across all identifiers
-- [ ] Only show fields relevant to product version tracking mode:
-  - IMEI tracking: Only IMEI fields
-  - Serial tracking: Only Serial fields  
-  - Both tracking: Both field sets
-- [ ] At least one field must be changed
-- [ ] Required fields based on tracking configuration
+VALIDATIE REGELS:
+- [ ] Nieuwe waarde kan niet identiek zijn aan huidige waarde
+- [ ] Nieuwe IMEI/Serienummer moet uniek zijn over alle identifiers
+- [ ] Toon alleen velden relevant voor productversie tracking modus:
+  - IMEI tracking: Alleen IMEI velden
+  - Serienummer tracking: Alleen Serienummer velden  
+  - Beide tracking: Beide veld sets
+- [ ] Minimaal één veld moet gewijzigd worden
+- [ ] Vereiste velden gebaseerd op tracking configuratie
 
-SWAP EXECUTION:
-- [ ] Update device_identifiers table with new values
-- [ ] Create entry in identifier_history table:
+SWAP UITVOERING:
+- [ ] Werk device_identifiers tabel bij met nieuwe waarden
+- [ ] Creëer entry in identifier_history tabel:
   - device_identifier_id
   - old_imei, new_imei
   - old_serial_number, new_serial_number
-  - changed_by (current user)
-  - note (optional reason)
+  - changed_by (huidige gebruiker)
+  - note (optionele reden)
   - timestamp
 
-HISTORY DISPLAY:
-- [ ] Identifier History section on detail page
-- [ ] Table showing all identifier swaps:
-  - Date/Time
-  - Old IMEI → New IMEI (if changed)
-  - Old Serial → New Serial (if changed)
-  - Changed By
-  - Reason/Note
-- [ ] Clear visual indication of what changed
+GESCHIEDENIS WEERGAVE:
+- [ ] Identifier Geschiedenis sectie op detailpagina
+- [ ] Tabel met alle identifier swaps:
+  - Datum/Tijd
+  - Oude IMEI → Nieuwe IMEI (indien gewijzigd)
+  - Oud Serienummer → Nieuw Serienummer (indien gewijzigd)
+  - Gewijzigd Door
+  - Reden/Notitie
+- [ ] Duidelijke visuele indicatie van wat gewijzigd is
 
-BUSINESS RULES:
-- [ ] Cannot swap to identifiers that already exist
-- [ ] All swaps are logged permanently
-- [ ] Product version and status remain unchanged
-- [ ] User must be logged to perform swaps
-- [ ] Confirmation required before executing swap
+BEDRIJFSREGELS:
+- [ ] Kan niet swappen naar identifiers die al bestaan
+- [ ] Alle swaps worden permanent gelogd
+- [ ] Productversie en status blijven ongewijzigd
+- [ ] Gebruiker moet ingelogd zijn om swaps uit te voeren
+- [ ] Bevestiging vereist voor uitvoering swap
 
-UI REQUIREMENTS:
-- [ ] Professional modal dialog
-- [ ] Clear field labeling showing old vs new values
-- [ ] Form validation with helpful error messages
-- [ ] Confirmation dialog with summary of changes
-- [ ] Success message after completion
-- [ ] Updated detail page showing new values and history
+UI VEREISTEN:
+- [ ] Professionele modal dialoog
+- [ ] Duidelijke veld labels die oud vs nieuwe waarden tonen
+- [ ] Formulier validatie met behulpzame foutmeldingen
+- [ ] Bevestigingsdialoog met samenvatting van wijzigingen
+- [ ] Succesbericht na voltooiing
+- [ ] Bijgewerkte detailpagina met nieuwe waarden en geschiedenis
 
 STORY POINTS: 5
-PRIORITY: Medium (Correction functionality)
-DEPENDENCIES: 005-identifier-search-and-detail
+PRIORITEIT: Middel (Correctie functionaliteit)
+AFHANKELIJKHEDEN: 005-identifier-search-and-detail

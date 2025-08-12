@@ -25,8 +25,11 @@ db.serialize(() => {
         CREATE TABLE IF NOT EXISTS device_identifiers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_version_id INTEGER NOT NULL,
+            delivery_id INTEGER,
             imei TEXT,
             serial_number TEXT,
+            original_imei TEXT,
+            original_serial_number TEXT,
             status TEXT NOT NULL DEFAULT 'in_stock' 
                 CHECK (status IN ('in_stock', 'sold', 'defective', 'missing', 'reserved')),
             is_clearance BOOLEAN DEFAULT FALSE,
@@ -35,6 +38,7 @@ db.serialize(() => {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (product_version_id) REFERENCES product_versions (id),
+            FOREIGN KEY (delivery_id) REFERENCES deliveries (id),
             UNIQUE(imei),
             UNIQUE(serial_number)
         )

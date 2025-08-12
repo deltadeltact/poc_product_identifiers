@@ -1,62 +1,62 @@
-USER STORY: Inventory Overview and Stock Tracking
+USER STORY: Voorraadoverzicht en Voorraad Tracking
 
-As a warehouse manager
-I want to view inventory levels per product version
-So that I can monitor stock levels and make purchasing decisions
+Als magazijnmanager
+Wil ik voorraadniveaus per productversie bekijken
+Zodat ik voorraadniveaus kan monitoren en inkoop beslissingen kan nemen
 
-ACCEPTANCE CRITERIA:
+ACCEPTATIECRITERIA:
 
-INVENTORY OVERVIEW PAGE:
-- [ ] Table showing all product versions with columns:
-  - Product Version Name
-  - Tracking Mode (color-coded badge)
-  - Current Stock Count
-  - Actions (View Details, View Identifiers)
+VOORRAADOVERZICHT PAGINA:
+- [ ] Tabel met alle productversies met kolommen:
+  - Productversie Naam
+  - Tracking Modus (kleurgecodeerde badge)
+  - Huidige Voorraad Aantal
+  - Acties (Details Bekijken, Identifiers Bekijken)
 
-- [ ] Stock count logic:
-  - For tracking modes (imei/serial/both): Count of identifiers with status = 'in_stock'
-  - For no tracking: Show "N/A" (no individual tracking)
+- [ ] Voorraad aantal logica:
+  - Voor tracking modi (imei/serienummer/beide): Aantal identifiers met status = 'op_voorraad'
+  - Voor geen tracking: Toon "N.v.t." (geen individuele tracking)
 
-- [ ] Click on stock count opens filtered identifier search (product_version + in_stock status)
-- [ ] Click on product name opens product version detail page
-- [ ] Visual indicators for stock levels:
-  - Green badge for items in stock
-  - Gray badge for zero stock
-  - "N/A" for non-tracked items
+- [ ] Klik op voorraad aantal opent gefilterde identifier zoeken (productversie + op_voorraad status)
+- [ ] Klik op productnaam opent productversie detailpagina
+- [ ] Visuele indicatoren voor voorraadniveaus:
+  - Groene badge voor items op voorraad
+  - Grijze badge voor nul voorraad
+  - "N.v.t." voor niet-getrackte items
 
-PRODUCT VERSION DETAIL ENHANCEMENTS:
-- [ ] Stock statistics panel:
-  - Total identifiers count
-  - In stock count
-  - Status distribution chart/progress bar
-  - Breakdown by status (sold, defective, missing, etc.)
+PRODUCTVERSIE DETAIL VERBETERINGEN:
+- [ ] Voorraad statistieken paneel:
+  - Totaal identifiers aantal
+  - Op voorraad aantal
+  - Status distributie grafiek/voortgangsbalk
+  - Verdeling per status (verkocht, defect, vermist, etc.)
 
-- [ ] Associated identifiers table:
-  - Show all identifiers for this product version
-  - Columns based on tracking mode (IMEI, Serial, or both)
-  - Status, Last Updated, Actions
-  - Link to individual identifier detail
+- [ ] Geassocieerde identifiers tabel:
+  - Toon alle identifiers voor deze productversie
+  - Kolommen gebaseerd op tracking modus (IMEI, Serienummer, of beide)
+  - Status, Laatst Bijgewerkt, Acties
+  - Link naar individuele identifier detail
 
-BUSINESS RULES:
-- [ ] Only product versions with tracking show clickable stock counts
-- [ ] Stock count only includes status = 'in_stock'
-- [ ] Non-tracked products show informational message
-- [ ] Real-time stock updates when status changes
+BEDRIJFSREGELS:
+- [ ] Alleen productversies met tracking tonen klikbare voorraad aantallen
+- [ ] Voorraad aantal bevat alleen status = 'op_voorraad'
+- [ ] Niet-getrackte producten tonen informatief bericht
+- [ ] Real-time voorraad updates wanneer status wijzigt
 
-DASHBOARD INTEGRATION:
-- [ ] Dashboard cards showing:
-  - Total product versions
-  - Total items in stock
-  - Low stock alerts (if applicable)
-  - Recent activity summary
+DASHBOARD INTEGRATIE:
+- [ ] Dashboard kaarten met:
+  - Totaal productversies
+  - Totaal items op voorraad
+  - Lage voorraad waarschuwingen (indien van toepassing)
+  - Recente activiteit samenvatting
 
-UI REQUIREMENTS:
-- [ ] Clear visual distinction between tracked and non-tracked products
-- [ ] Responsive table design
-- [ ] Professional dashboard layout
-- [ ] Quick access to detailed views
-- [ ] Progress bars for stock distribution visualization
+UI VEREISTEN:
+- [ ] Duidelijk visueel onderscheid tussen getrackte en niet-getrackte producten
+- [ ] Responsief tabel ontwerp
+- [ ] Professionele dashboard layout
+- [ ] Snelle toegang tot detailweergaven
+- [ ] Voortgangsbalken voor voorraad distributie visualisatie
 
 STORY POINTS: 4
-PRIORITY: Medium (Reporting/Overview)
-DEPENDENCIES: 005-identifier-search-and-detail
+PRIORITEIT: Middel (Rapportage/Overzicht)
+AFHANKELIJKHEDEN: 005-identifier-search-and-detail

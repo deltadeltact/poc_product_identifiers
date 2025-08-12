@@ -70,6 +70,38 @@
                                     </a>
                                 </td>
                             </tr>
+                            <tr>
+                                <th>Leveringsnummer:</th>
+                                <td>
+                                    <% if (identifier.delivery_number) { %>
+                                        <a href="/deliveries/<%= identifier.delivery_id %>" class="text-decoration-none">
+                                            <code class="fs-6"><%= identifier.delivery_number %></code>
+                                        </a>
+                                    <% } else { %>
+                                        <span class="text-muted">Niet beschikbaar</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Leverancier:</th>
+                                <td>
+                                    <% if (identifier.supplier) { %>
+                                        <%= identifier.supplier %>
+                                    <% } else { %>
+                                        <span class="text-muted">Niet beschikbaar</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Leveringsdatum:</th>
+                                <td>
+                                    <% if (identifier.delivery_date) { %>
+                                        <%= new Date(identifier.delivery_date).toLocaleDateString('nl-NL') %>
+                                    <% } else { %>
+                                        <span class="text-muted">Niet beschikbaar</span>
+                                    <% } %>
+                                </td>
+                            </tr>
                         </table>
                     </div>
                     <div class="col-md-6">

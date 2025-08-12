@@ -1,69 +1,69 @@
-USER STORY: Identifier Search and Detail Views
+USER STORY: Identifier Zoeken en Detailweergaven
 
-As a warehouse operator
-I want to search for and view individual product identifiers
-So that I can track the status and history of specific items
+Als magazijnmedewerker
+Wil ik individuele product identifiers zoeken en bekijken
+Zodat ik de status en geschiedenis van specifieke items kan volgen
 
-ACCEPTANCE CRITERIA:
+ACCEPTATIECRITERIA:
 
-IDENTIFIER SEARCH PAGE:
-- [ ] Search form with filters:
-  - Text search (IMEI or Serial Number)
-  - Product Version dropdown
-  - Status dropdown (All, In Stock, Sold, Defective, Missing, Reserved)
-- [ ] Results table with columns: ID, IMEI, Serial Number, Product Version, Status
-- [ ] Click on ID/IMEI/Serial opens identifier detail page
-- [ ] Click on Product Version opens product version detail
-- [ ] Empty state when no results found
-- [ ] Pagination if results exceed page limit
+IDENTIFIER ZOEKPAGINA:
+- [ ] Zoekformulier met filters:
+  - Tekstzoeken (IMEI of Serienummer)
+  - Productversie dropdown
+  - Status dropdown (Alle, Op Voorraad, Verkocht, Defect, Vermist, Gereserveerd)
+- [ ] Resultaten tabel met kolommen: ID, IMEI, Serienummer, Productversie, Status
+- [ ] Klik op ID/IMEI/Serienummer opent identifier detailpagina
+- [ ] Klik op Productversie opent productversie detail
+- [ ] Lege staat wanneer geen resultaten gevonden
+- [ ] Paginering als resultaten paginalimiet overschrijden
 
-IDENTIFIER DETAIL PAGE:
-- [ ] Identifier information panel:
-  - IMEI (if applicable)
-  - Serial Number (if applicable)
-  - Product Version (linked)
-  - Current Status (color-coded badge)
-  - Created date
-  - Last updated date
+IDENTIFIER DETAILPAGINA:
+- [ ] Identifier informatie paneel:
+  - IMEI (indien van toepassing)
+  - Serienummer (indien van toepassing)
+  - Productversie (gelinkt)
+  - Huidige Status (kleurgecodeerde badge)
+  - Aanmaakdatum
+  - Laatst bijgewerkt datum
 
-- [ ] Actions panel with buttons:
-  - Change Status
-  - Change Identifier (IMEI/Serial swap)
-  - Change Product Version (version swap)
-  - Mark as Clearance (if status = in_stock)
+- [ ] Acties paneel met knoppen:
+  - Status Wijzigen
+  - Identifier Wijzigen (IMEI/Serienummer swap)
+  - Productversie Wijzigen (versie swap)
+  - Markeren als Uitverkoop (als status = op_voorraad)
 
-- [ ] Status History section:
-  - Table showing all status changes
-  - Columns: Date/Time, Old Status, New Status, Changed By, Note
-  - Sorted by date descending
+- [ ] Status Geschiedenis sectie:
+  - Tabel met alle statuswijzigingen
+  - Kolommen: Datum/Tijd, Oude Status, Nieuwe Status, Gewijzigd Door, Notitie
+  - Gesorteerd op datum aflopend
 
-- [ ] Change History sections:
-  - Product version swaps
+- [ ] Wijzigings Geschiedenis secties:
+  - Productversie swaps
   - Identifier swaps
-  - Combined timeline view
+  - Gecombineerde tijdlijn weergave
 
-STATUS CHANGE FUNCTIONALITY:
-- [ ] Modal dialog for status change
-- [ ] Status dropdown (excluding current status)
-- [ ] Optional note field
-- [ ] Confirmation and validation
-- [ ] Creates status_history entry
-- [ ] Updates device_identifiers.status
-- [ ] Logs user and timestamp
+STATUS WIJZIGING FUNCTIONALITEIT:
+- [ ] Modal dialoog voor statuswijziging
+- [ ] Status dropdown (huidige status uitgesloten)
+- [ ] Optioneel notitie veld
+- [ ] Bevestiging en validatie
+- [ ] Creëert status_history entry
+- [ ] Werkt device_identifiers.status bij
+- [ ] Logt gebruiker en tijdstempel
 
-BUSINESS RULES:
-- [ ] Status changes are logged with user and timestamp
-- [ ] Cannot change to same status
-- [ ] All status changes create history records
-- [ ] Clearance marking only available for in_stock items
+BEDRIJFSREGELS:
+- [ ] Statuswijzigingen worden gelogd met gebruiker en tijdstempel
+- [ ] Kan niet wijzigen naar dezelfde status
+- [ ] Alle statuswijzigingen creëren geschiedenis records
+- [ ] Uitverkoop markering alleen beschikbaar voor op_voorraad items
 
-UI REQUIREMENTS:
-- [ ] Professional search interface
-- [ ] Color-coded status badges
-- [ ] Clear visual hierarchy in detail view
-- [ ] Responsive design
-- [ ] Loading states and error handling
+UI VEREISTEN:
+- [ ] Professionele zoek interface
+- [ ] Kleurgecodeerde status badges
+- [ ] Duidelijke visuele hiërarchie in detailweergave
+- [ ] Responsief ontwerp
+- [ ] Laadstatus en foutafhandeling
 
 STORY POINTS: 6
-PRIORITY: High (Core functionality)
-DEPENDENCIES: 004-delivery-management
+PRIORITEIT: Hoog (Kernfunctionaliteit)
+AFHANKELIJKHEDEN: 004-delivery-management

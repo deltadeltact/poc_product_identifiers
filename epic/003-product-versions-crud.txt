@@ -1,40 +1,40 @@
-USER STORY: Product Versions Management
+USER STORY: Productversie Beheer
 
-As a warehouse manager
-I want to manage product versions with tracking configuration
-So that I can define which identifiers are required for each product type
+Als magazijnmanager
+Wil ik productversies beheren met tracking configuratie
+Zodat ik kan definiëren welke identifiers vereist zijn voor elk producttype
 
-ACCEPTANCE CRITERIA:
-- [ ] Product versions overview page showing all versions in table format
-- [ ] Columns: Name, EAN, Tracking Configuration, Stock Count, Total Identifiers
-- [ ] "Add New Product Version" button and form
-- [ ] Form fields:
-  - Name (required)
-  - EAN (optional, 13 digits validation)
-  - Tracking Mode dropdown (None, IMEI, Serial Number, Both)
-- [ ] Edit product version functionality
-- [ ] Click on product version name opens detail page
-- [ ] Detail page shows:
-  - Product version information
-  - Stock statistics and charts
-  - List of all associated identifiers
-  - Edit button
-- [ ] Delete product version (with confirmation)
-- [ ] Proper validation and error handling
-- [ ] Success/error messages after actions
+ACCEPTATIECRITERIA:
+- [ ] Productversies overzichtspagina met alle versies in tabel formaat
+- [ ] Kolommen: Naam, EAN, Tracking Configuratie, Voorraad Aantal, Totaal Identifiers
+- [ ] "Nieuwe Productversie Toevoegen" knop en formulier
+- [ ] Formulier velden:
+  - Naam (verplicht)
+  - EAN (optioneel, 13 cijfers validatie)
+  - Tracking Modus dropdown (Geen, IMEI, Serienummer, Beide)
+- [ ] Productversie bewerken functionaliteit
+- [ ] Klik op productversie naam opent detailpagina
+- [ ] Detailpagina toont:
+  - Productversie informatie
+  - Voorraad statistieken en grafieken
+  - Lijst van alle geassocieerde identifiers
+  - Bewerken knop
+- [ ] Productversie verwijderen (met bevestiging)
+- [ ] Juiste validatie en foutafhandeling
+- [ ] Succes/fout berichten na acties
 
-BUSINESS RULES:
-- [ ] Tracking mode determines which identifier fields are required during stock entry
-- [ ] Cannot delete product version if identifiers exist
-- [ ] EAN must be unique if provided
-- [ ] Product version name is required
+BEDRIJFSREGELS:
+- [ ] Tracking modus bepaalt welke identifier velden vereist zijn tijdens voorraad invoer
+- [ ] Kan productversie niet verwijderen als identifiers bestaan
+- [ ] EAN moet uniek zijn indien opgegeven
+- [ ] Productversie naam is verplicht
 
-UI REQUIREMENTS:
-- [ ] Responsive table with search/filter capabilities
-- [ ] Color-coded badges for tracking modes
-- [ ] Clear visual indication of stock levels
-- [ ] Professional form design with proper labels
+UI VEREISTEN:
+- [ ] Responsieve tabel met zoek/filter mogelijkheden
+- [ ] Kleurgecodeerde badges voor tracking modi
+- [ ] Duidelijke visuele indicatie van voorraadniveaus
+- [ ] Professioneel formulier ontwerp met juiste labels
 
 STORY POINTS: 5
-PRIORITY: High (Core functionality)
-DEPENDENCIES: 001-database-setup, 002-project-structure
+PRIORITEIT: Hoog (Kernfunctionaliteit)
+AFHANKELIJKHEDEN: 001-database-setup, 002-project-structure

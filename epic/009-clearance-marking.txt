@@ -1,68 +1,68 @@
-USER STORY: Clearance/Bargain Basement Marking
+USER STORY: Uitverkoop/Bargain Basement Markering
 
-As a warehouse manager
-I want to mark individual items as clearance products
-So that they can be sold separately at reduced prices with special handling
+Als magazijnmanager
+Wil ik individuele items markeren als uitverkoop producten
+Zodat ze apart verkocht kunnen worden tegen gereduceerde prijzen met speciale behandeling
 
-ACCEPTANCE CRITERIA:
+ACCEPTATIECRITERIA:
 
-CLEARANCE MARKING FUNCTIONALITY:
-- [ ] "Mark as Clearance" button on identifier detail page (only for in_stock items)
-- [ ] Modal dialog with form fields:
-  - Clearance checkbox (on/off)
-  - Clearance Price field (optional, decimal)
-  - Clearance Reason field (optional text, e.g., "Box damage", "Display model")
+UITVERKOOP MARKERING FUNCTIONALITEIT:
+- [ ] "Markeren als Uitverkoop" knop op identifier detailpagina (alleen voor op_voorraad items)
+- [ ] Modal dialoog met formulier velden:
+  - Uitverkoop checkbox (aan/uit)
+  - Uitverkoop Prijs veld (optioneel, decimaal)
+  - Uitverkoop Reden veld (optionele tekst, bijv. "Doos beschadigd", "Showmodel")
 
-CLEARANCE OVERVIEW PAGE:
-- [ ] New navigation item "Clearance Items" or section in inventory
-- [ ] Table showing all items where is_clearance = true:
-  - Product Version Name
-  - IMEI / Serial Number  
-  - Status (should be in_stock)
-  - Original Price vs Clearance Price
-  - Reason
-  - Date Marked
-  - Actions (Remove Clearance Status, Edit)
+UITVERKOOP OVERZICHT PAGINA:
+- [ ] Nieuw navigatie item "Uitverkoop Items" of sectie in voorraad
+- [ ] Tabel met alle items waar is_clearance = true:
+  - Productversie Naam
+  - IMEI / Serienummer  
+  - Status (zou op_voorraad moeten zijn)
+  - Originele Prijs vs Uitverkoop Prijs
+  - Reden
+  - Datum Gemarkeerd
+  - Acties (Uitverkoop Status Verwijderen, Bewerken)
 
-DATABASE CHANGES:
-- [ ] Add clearance fields to device_identifiers table:
-  - is_clearance (boolean, default false)
+DATABASE WIJZIGINGEN:
+- [ ] Voeg uitverkoop velden toe aan device_identifiers tabel:
+  - is_clearance (boolean, standaard false)
   - clearance_price (decimal, nullable)
   - clearance_reason (text, nullable)
   - clearance_date (datetime, nullable)
 
-BUSINESS RULES:  
-- [ ] Only items with status = 'in_stock' can be marked as clearance
-- [ ] Clearance price must be positive if provided
-- [ ] Clearance items maintain their tracking and can still have status changes
-- [ ] Removing clearance status clears all clearance fields
-- [ ] Clearance status is preserved through status changes (except when sold)
+BEDRIJFSREGELS:  
+- [ ] Alleen items met status = 'op_voorraad' kunnen gemarkeerd worden als uitverkoop
+- [ ] Uitverkoop prijs moet positief zijn indien opgegeven
+- [ ] Uitverkoop items behouden hun tracking en kunnen nog steeds statuswijzigingen hebben
+- [ ] Uitverkoop status verwijderen wist alle uitverkoop velden
+- [ ] Uitverkoop status wordt behouden tijdens statuswijzigingen (behalve wanneer verkocht)
 
-CLEARANCE MANAGEMENT:
-- [ ] Remove clearance status functionality
-- [ ] Edit clearance price and reason
-- [ ] Bulk clearance operations (future enhancement hook)
-- [ ] Clearance reporting and statistics
+UITVERKOOP BEHEER:
+- [ ] Uitverkoop status verwijderen functionaliteit
+- [ ] Uitverkoop prijs en reden bewerken
+- [ ] Bulk uitverkoop operaties (toekomstige verbetering hook)
+- [ ] Uitverkoop rapportage en statistieken
 
-INTEGRATION POINTS:
-- [ ] Show clearance badge/indicator on identifier detail pages
-- [ ] Include clearance info in inventory overviews  
-- [ ] Filter options in identifier search (clearance items only)
-- [ ] Dashboard widget showing clearance items count
+INTEGRATIE PUNTEN:
+- [ ] Toon uitverkoop badge/indicator op identifier detailpagina's
+- [ ] Neem uitverkoop info op in voorraadoverzichten  
+- [ ] Filter opties in identifier zoeken (alleen uitverkoop items)
+- [ ] Dashboard widget met uitverkoop items aantal
 
-UI REQUIREMENTS:
-- [ ] Clear visual indication of clearance items (orange badges, special styling)
-- [ ] Professional clearance management interface
-- [ ] Price formatting and validation
-- [ ] Confirmation dialogs for clearance status changes
-- [ ] Responsive clearance overview table
+UI VEREISTEN:
+- [ ] Duidelijke visuele indicatie van uitverkoop items (oranje badges, speciale styling)
+- [ ] Professionele uitverkoop beheer interface
+- [ ] Prijs formattering en validatie
+- [ ] Bevestigingsdialogen voor uitverkoop statuswijzigingen
+- [ ] Responsieve uitverkoop overzicht tabel
 
-REPORTING FEATURES:
-- [ ] Clearance items count on dashboard
-- [ ] Average discount percentage
-- [ ] Clearance items by reason/category
-- [ ] Age of clearance items (how long marked)
+RAPPORTAGE FUNCTIES:
+- [ ] Uitverkoop items aantal op dashboard
+- [ ] Gemiddelde korting percentage
+- [ ] Uitverkoop items per reden/categorie
+- [ ] Leeftijd van uitverkoop items (hoe lang gemarkeerd)
 
 STORY POINTS: 4
-PRIORITY: Low (Enhancement feature)
-DEPENDENCIES: 006-inventory-overview
+PRIORITEIT: Laag (Verbeteringsfunctie)
+AFHANKELIJKHEDEN: 006-inventory-overview
