@@ -1,4 +1,4 @@
-USER STORY: Identifier Swap (IMEI/Serienummer Wijziging)
+USER STORY: Identifier Correctie (IMEI/Serienummer Wijziging)
 
 Als magazijnmedewerker
 Wil ik de IMEI of serienummer van een apparaat wijzigen
@@ -6,14 +6,14 @@ Zodat ik registratiefouten kan corrigeren zonder tracking geschiedenis te verlie
 
 ACCEPTATIECRITERIA:
 
-IDENTIFIER SWAP FUNCTIONALITEIT:
-- [ ] "Identifier Wijzigen" knop op identifier detailpagina
-- [ ] Modal dialoog met formulier velden:
+IDENTIFIER CORRECTIE FUNCTIONALITEIT:
+- [ ] "Identifier Wijzigen" functie toegankelijk vanuit identifier detailpagina
+- [ ] Gebruikersinterface voor identifier wijziging met velden:
   - Huidige IMEI (alleen-lezen, indien van toepassing)
   - Nieuwe IMEI (bewerkbaar, als tracking modus vereist)
   - Huidig Serienummer (alleen-lezen, indien van toepassing)
   - Nieuw Serienummer (bewerkbaar, als tracking modus vereist)
-  - Optioneel notitie veld voor reden
+  - Optioneel notitie veld voor reden van wijziging
 
 VALIDATIE REGELS:
 - [ ] Nieuwe waarde kan niet identiek zijn aan huidige waarde
@@ -49,6 +49,7 @@ BEDRIJFSREGELS:
 - [ ] Kan niet swappen naar identifiers die al bestaan
 - [ ] Alle swaps worden permanent gelogd
 - [ ] Productversie en status blijven ongewijzigd
+- [ ] Levering relatie blijft intact (delivery_id blijft ongewijzigd)
 - [ ] Gebruiker moet ingelogd zijn om swaps uit te voeren
 - [ ] Bevestiging vereist voor uitvoering swap
 
@@ -59,6 +60,13 @@ UI VEREISTEN:
 - [ ] Bevestigingsdialoog met samenvatting van wijzigingen
 - [ ] Succesbericht na voltooiing
 - [ ] Bijgewerkte detailpagina met nieuwe waarden en geschiedenis
+
+LEVERINGSPAGINA INTEGRATIE:
+- [ ] Alert icoon tonen bij identifiers die een identifier swap hebben ondergaan
+- [ ] Visuele indicatie van gewijzigde identifiers op leveringsdetailpagina
+- [ ] Tooltip of badge met informatie over identifier wijziging
+- [ ] Oorspronkelijke vs huidige identifier waarden weergeven
+- [ ] Link naar identifier geschiedenis vanuit levering
 
 STORY POINTS: 5
 PRIORITEIT: Middel (Correctie functionaliteit)

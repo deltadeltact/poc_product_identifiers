@@ -62,25 +62,25 @@ db.serialize(() => {
     `);
 
     // Add individual identifiers for tracked products with delivery_id references
-    db.run(`INSERT INTO device_identifiers (product_version_id, delivery_id, imei, serial_number, original_imei, original_serial_number, status, created_at, updated_at) VALUES 
+    db.run(`INSERT INTO device_identifiers (product_version_id, original_product_version_id, delivery_id, imei, serial_number, original_imei, original_serial_number, status, created_at, updated_at) VALUES 
         -- iPhone 15 Pro (IMEI tracking) - Delivery WS0001 (delivery_id = 1)
-        (1, 1, '351234567890001', NULL, '351234567890001', NULL, 'in_stock', '2025-08-10 09:10:00', '2025-08-10 09:10:00'),
-        (1, 1, '351234567890002', NULL, '351234567890002', NULL, 'in_stock', '2025-08-10 09:11:00', '2025-08-10 09:11:00'),
-        (1, 1, '351234567890003', NULL, '351234567890003', NULL, 'sold', '2025-08-10 09:12:00', '2025-08-11 15:30:00'),
+        (1, 1, 1, '351234567890001', NULL, '351234567890001', NULL, 'in_stock', '2025-08-10 09:10:00', '2025-08-10 09:10:00'),
+        (1, 1, 1, '351234567890002', NULL, '351234567890002', NULL, 'in_stock', '2025-08-10 09:11:00', '2025-08-10 09:11:00'),
+        (1, 1, 1, '351234567890003', NULL, '351234567890003', NULL, 'sold', '2025-08-10 09:12:00', '2025-08-11 15:30:00'),
         
         -- Samsung Galaxy S24 Ultra (IMEI tracking) - Delivery WS0002 (delivery_id = 2)
-        (2, 2, '351876543210001', NULL, '351876543210001', NULL, 'in_stock', '2025-08-11 10:40:00', '2025-08-11 10:40:00'),
-        (2, 2, '351876543210002', NULL, '351876543210002', NULL, 'in_stock', '2025-08-11 10:41:00', '2025-08-11 10:41:00'),
+        (2, 2, 2, '351876543210001', NULL, '351876543210001', NULL, 'in_stock', '2025-08-11 10:40:00', '2025-08-11 10:40:00'),
+        (2, 2, 2, '351876543210002', NULL, '351876543210002', NULL, 'in_stock', '2025-08-11 10:41:00', '2025-08-11 10:41:00'),
         
         -- AirPods Pro (Serial tracking) - Delivery WS0003 (delivery_id = 3)
-        (3, 3, NULL, 'AP2024001', NULL, 'AP2024001', 'in_stock', '2025-08-11 14:25:00', '2025-08-11 14:25:00'),
-        (3, 3, NULL, 'AP2024002', NULL, 'AP2024002', 'in_stock', '2025-08-11 14:26:00', '2025-08-11 14:26:00'),
-        (3, 3, NULL, 'AP2024003', NULL, 'AP2024003', 'sold', '2025-08-11 14:27:00', '2025-08-12 10:15:00'),
-        (3, 3, NULL, 'AP2024004', NULL, 'AP2024004', 'in_stock', '2025-08-11 14:28:00', '2025-08-11 14:28:00'),
+        (3, 3, 3, NULL, 'AP2024001', NULL, 'AP2024001', 'in_stock', '2025-08-11 14:25:00', '2025-08-11 14:25:00'),
+        (3, 3, 3, NULL, 'AP2024002', NULL, 'AP2024002', 'in_stock', '2025-08-11 14:26:00', '2025-08-11 14:26:00'),
+        (3, 3, 3, NULL, 'AP2024003', NULL, 'AP2024003', 'sold', '2025-08-11 14:27:00', '2025-08-12 10:15:00'),
+        (3, 3, 3, NULL, 'AP2024004', NULL, 'AP2024004', 'in_stock', '2025-08-11 14:28:00', '2025-08-11 14:28:00'),
         
         -- Galaxy Watch (Serial tracking) - Delivery WS0004 (delivery_id = 4)
-        (4, 4, NULL, 'GW2024001', NULL, 'GW2024001', 'in_stock', '2025-08-12 08:55:00', '2025-08-12 08:55:00'),
-        (4, 4, NULL, 'GW2024002', NULL, 'GW2024002', 'in_stock', '2025-08-12 08:56:00', '2025-08-12 08:56:00')
+        (4, 4, 4, NULL, 'GW2024001', NULL, 'GW2024001', 'in_stock', '2025-08-12 08:55:00', '2025-08-12 08:55:00'),
+        (4, 4, 4, NULL, 'GW2024002', NULL, 'GW2024002', 'in_stock', '2025-08-12 08:56:00', '2025-08-12 08:56:00')
     `);
 
     // Add bulk stock for non-tracked products (accessories)

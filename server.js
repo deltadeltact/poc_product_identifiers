@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 const app = express();
-const PORT = 3004;
+const PORT = 3000;
 
 // Database connection
 const dbPath = path.join(__dirname, 'database.sqlite');
@@ -410,11 +410,11 @@ app.post('/identifiers/:id/change-identifier', (req, res) => {
         }
         
         // Validation: Check required fields based on tracking mode
-        if ((current.tracking_mode === 'imei' || current.tracking_mode === 'both') && !new_imei) {
+        if (current.tracking_mode === 'imei' && !new_imei) {
             return res.redirect(`/identifiers/${identifierId}?error=${encodeURIComponent('IMEI is verplicht voor deze trackingconfiguratie')}`);
         }
         
-        if ((current.tracking_mode === 'serial' || current.tracking_mode === 'both') && !new_serial_number) {
+        if (current.tracking_mode === 'serial' && !new_serial_number) {
             return res.redirect(`/identifiers/${identifierId}?error=${encodeURIComponent('Serienummer is verplicht voor deze trackingconfiguratie')}`);
         }
         
@@ -692,16 +692,25 @@ app.get('/deliveries/:id', (req, res) => {
                         db.all(`
                             SELECT di.id, di.imei, di.serial_number, di.original_imei, di.original_serial_number, 
                                    di.status, di.created_at, d.delivery_number,
+                                   current_pv.name as current_product_version_name,
+                                   original_pv.name as original_product_version_name,
                                    CASE 
                                        WHEN (di.imei != di.original_imei AND di.original_imei IS NOT NULL) 
                                          OR (di.serial_number != di.original_serial_number AND di.original_serial_number IS NOT NULL)
                                        THEN 1 
                                        ELSE 0 
-                                   END as is_swapped
+                                   END as is_identifier_swapped,
+                                   CASE 
+                                       WHEN di.product_version_id != di.original_product_version_id
+                                       THEN 1 
+                                       ELSE 0 
+                                   END as is_product_version_swapped
                             FROM device_identifiers di
                             LEFT JOIN deliveries d ON di.delivery_id = d.id
+                            LEFT JOIN product_versions current_pv ON di.product_version_id = current_pv.id
+                            LEFT JOIN product_versions original_pv ON di.original_product_version_id = original_pv.id
                             WHERE di.delivery_id = ? 
-                            AND di.product_version_id = ?
+                            AND di.original_product_version_id = ?
                             ORDER BY di.created_at
                         `, [deliveryId, line.product_version_id], (err, identifiers) => {
                             if (err) {
@@ -793,15 +802,15 @@ app.post('/deliveries/:id/lines', (req, res) => {
                 // For tracked items, add individual identifiers
                 if (identifiers && Array.isArray(identifiers) && identifiers.length > 0) {
                     const stmt = db.prepare(`
-                        INSERT INTO device_identifiers (product_version_id, delivery_id, imei, serial_number, original_imei, original_serial_number, status)
-                        VALUES (?, ?, ?, ?, ?, ?, 'in_stock')
+                        INSERT INTO device_identifiers (product_version_id, original_product_version_id, delivery_id, imei, serial_number, original_imei, original_serial_number, status)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, 'in_stock')
                     `);
                     
                     identifiers.forEach(identifier => {
                         if (identifier && (identifier.imei || identifier.serial_number)) {
                             const imei = identifier.imei || null;
                             const serialNumber = identifier.serial_number || null;
-                            stmt.run([product_version_id, deliveryId, imei, serialNumber, imei, serialNumber]);
+                            stmt.run([product_version_id, product_version_id, deliveryId, imei, serialNumber, imei, serialNumber]);
                         }
                     });
                     

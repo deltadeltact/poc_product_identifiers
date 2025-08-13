@@ -226,10 +226,6 @@
                                                 badgeClass = 'bg-warning';
                                                 trackingText = 'Serienummer';
                                                 break;
-                                            case 'both':
-                                                badgeClass = 'bg-success';
-                                                trackingText = 'IMEI + Serienummer';
-                                                break;
                                         }
                                     %>
                                     <span class="badge <%= badgeClass %>">
@@ -269,9 +265,14 @@
                                                                         <% if (identifier.original_imei) { %>
                                                                             <small class="text-muted">IMEI:</small>
                                                                             <code class="text-primary"><%= identifier.original_imei %></code>
-                                                                            <% if (identifier.is_swapped && identifier.imei !== identifier.original_imei) { %>
+                                                                            <% if (identifier.is_identifier_swapped && identifier.imei !== identifier.original_imei) { %>
                                                                                 <i class="fas fa-exclamation-triangle text-warning ms-1" 
                                                                                    title="Deze IMEI is gewijzigd naar: <%= identifier.imei %>" 
+                                                                                   data-bs-toggle="tooltip"></i>
+                                                                            <% } %>
+                                                                            <% if (identifier.is_product_version_swapped) { %>
+                                                                                <i class="fas fa-arrow-right text-danger ms-1" 
+                                                                                   title="Productversie gewijzigd na levering naar: <%= identifier.current_product_version_name %>" 
                                                                                    data-bs-toggle="tooltip"></i>
                                                                             <% } %>
                                                                             <br>
@@ -279,9 +280,14 @@
                                                                         <% if (identifier.original_serial_number) { %>
                                                                             <small class="text-muted">Serienummer:</small>
                                                                             <code class="text-success"><%= identifier.original_serial_number %></code>
-                                                                            <% if (identifier.is_swapped && identifier.serial_number !== identifier.original_serial_number) { %>
+                                                                            <% if (identifier.is_identifier_swapped && identifier.serial_number !== identifier.original_serial_number) { %>
                                                                                 <i class="fas fa-exclamation-triangle text-warning ms-1" 
                                                                                    title="Dit serienummer is gewijzigd naar: <%= identifier.serial_number %>" 
+                                                                                   data-bs-toggle="tooltip"></i>
+                                                                            <% } %>
+                                                                            <% if (identifier.is_product_version_swapped) { %>
+                                                                                <i class="fas fa-arrow-right text-danger ms-1" 
+                                                                                   title="Productversie gewijzigd na levering naar: <%= identifier.current_product_version_name %>" 
                                                                                    data-bs-toggle="tooltip"></i>
                                                                             <% } %>
                                                                         <% } %>
@@ -374,10 +380,6 @@ document.getElementById('product_version_id').addEventListener('change', functio
                 trackingText = 'Serienummer tracking - serienummers vereist';
                 showIdentifiers = true;
                 break;
-            case 'both':
-                trackingText = 'IMEI + Serienummer tracking - beide vereist';
-                showIdentifiers = true;
-                break;
         }
         
         trackingInfo.innerHTML = '<strong>' + trackingText + '</strong>';
@@ -407,11 +409,11 @@ document.getElementById('quantity').addEventListener('input', function() {
         for (let i = 1; i <= quantity; i++) {
             html += '<div class="row mb-2"><div class="col-md-1"><label class="form-label">' + i + '.</label></div>';
             
-            if (trackingMode === 'imei' || trackingMode === 'both') {
+            if (trackingMode === 'imei') {
                 html += '<div class="col-md-5"><input type="text" class="form-control" name="identifiers[' + (i-1) + '][imei]" placeholder="IMEI" required></div>';
             }
             
-            if (trackingMode === 'serial' || trackingMode === 'both') {
+            if (trackingMode === 'serial') {
                 html += '<div class="col-md-5"><input type="text" class="form-control" name="identifiers[' + (i-1) + '][serial_number]" placeholder="Serienummer" required></div>';
             }
             

@@ -23,7 +23,12 @@ LEVERING DETAILPAGINA:
 - [ ] Levering informatie paneel
 - [ ] Statistieken paneel (aantal regels, totaal items)
 - [ ] Product regel toevoegen formulier (alleen wanneer status = concept)
-- [ ] Lijst van bestaande productregels
+- [ ] Lijst van bestaande productregels met geregistreerde identifiers
+- [ ] Alert iconen bij identifiers die wijzigingen hebben ondergaan:
+  - Identifier swap indicator (IMEI/serienummer gewijzigd)
+  - Productversie swap indicator (productversie gewijzigd)
+  - Tooltip met oorspronkelijke vs huidige waarden
+  - Link naar wijzigingsgeschiedenis
 - [ ] "Levering Boeken" knop (alleen wanneer status = concept)
 
 PRODUCT REGEL TOEVOEGEN:
@@ -45,12 +50,27 @@ LEVERING BOEKEN:
 - [ ] Bevestigingsdialoog voor het boeken
 - [ ] Kan levering niet wijzigen na het boeken
 
+WIJZIGINGS INDICATOREN:
+- [ ] Geel waarschuwings icoon (⚠️) na identifiers die een IMEI/serienummer swap hebben ondergaan
+- [ ] Rood pijl icoon (→) na identifiers die een productversie swap hebben ondergaan  
+- [ ] Iconen worden direct na identifier getoond zonder extra tekst of labels
+- [ ] Voor identifier swaps - tooltip: "IMEI/Serienummer gewijzigd naar: [nieuwe waarde]"
+- [ ] Voor productversie swaps - tooltip: "Productversie gewijzigd na levering naar: [nieuwe versie]"
+- [ ] Minimalistisch ontwerp: alleen essentiële informatie zichtbaar
+- [ ] Leveringsdetails blijven altijd oorspronkelijke geleverde data tonen (immutable)
+- [ ] Klik op identifier opent volledige wijzigingsgeschiedenis
+- [ ] Hover tooltips geven gedetailleerde informatie over wijzigingen
+
 BEDRIJFSREGELS:
 - [ ] Levering in concept kan bewerkt/verwijderd worden
-- [ ] Geboekte leveringen zijn alleen-lezen
+- [ ] Geboekte leveringen zijn immutable (alleen-lezen)
 - [ ] IMEI/Serienummers moeten globaal uniek zijn
 - [ ] Kan geen lege levering boeken
 - [ ] Alle identifier velden moeten compleet zijn per tracking configuratie
+- [ ] Wijzigingsalerts worden real-time bijgewerkt wanneer swaps plaatsvinden
+- [ ] Leveringsregistratie reflecteert altijd wat daadwerkelijk geleverd werd
+- [ ] Post-delivery wijzigingen (identifier/productversie swaps) wijzigen leveringsdata niet
+- [ ] Leveringsstatistieken en rapporten blijven gebaseerd op oorspronkelijke leveringsdata
 
 STORY POINTS: 8
 PRIORITEIT: Hoog (Kernfunctionaliteit)

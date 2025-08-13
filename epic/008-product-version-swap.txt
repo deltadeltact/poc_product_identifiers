@@ -1,75 +1,87 @@
-USER STORY: Product Version Swap
+## USER STORY: Productversie Wijziging
 
-As a warehouse operator  
-I want to change the product version of a registered device
-So that I can correct misclassified items while keeping the same identifiers
+Als magazijnmedewerker  
+Wil ik de productversie van een geregistreerd apparaat kunnen wijzigen
+Zodat ik verkeerd geclassificeerde items kan corrigeren terwijl dezelfde identifiers behouden blijven
 
-ACCEPTANCE CRITERIA:
+### acceptatiecriteria
 
-PRODUCT VERSION SWAP FUNCTIONALITY:
-- [ ] "Change Product Version" button on identifier detail page
-- [ ] Modal dialog with form fields:
-  - Current Product Version (read-only)
-  - New Product Version (dropdown, required)
-  - Optional note field for reason
+### productversie wijziging functionaliteit
+- [ ] "Productversie Wijzigen" functie toegankelijk vanuit identifier detailpagina
+- [ ] Gebruikersinterface voor productversie wijziging met velden:
+  - Huidige Productversie (alleen-lezen)
+  - Nieuwe Productversie (dropdown, verplicht)
+  - Optioneel notitie veld voor reden van wijziging
 
-VALIDATION RULES:
-- [ ] New product version cannot be the same as current
-- [ ] New product version must be active in system
-- [ ] New product version tracking mode must be compatible:
-  - If current has IMEI, new version must support IMEI tracking
-  - If current has Serial, new version must support Serial tracking
-  - Prevent swaps that would make existing identifiers invalid
+### validatie regels
+- [ ] Nieuwe productversie kan niet identiek zijn aan huidige versie
+- [ ] Nieuwe productversie moet actief zijn in het systeem
+- [ ] Nieuwe productversie tracking modus moet compatibel zijn:
+  - Als huidige versie IMEI heeft, moet nieuwe versie IMEI tracking ondersteunen
+  - Als huidige versie Serienummer heeft, moet nieuwe versie Serienummer tracking ondersteunen
+  - Voorkom swaps die bestaande identifiers ongeldig zouden maken
 
-COMPATIBILITY MATRIX:
-- [ ] None → Any (no constraints)
-- [ ] IMEI → IMEI or Both (must support IMEI)
-- [ ] Serial → Serial or Both (must support Serial) 
-- [ ] Both → Both only (must support both identifiers)
+### compatibiliteits matrix
+- [ ] Geen → IMEI of Serienummer (geen beperkingen)
+- [ ] IMEI → Alleen IMEI (moet IMEI ondersteunen)
+- [ ] Serienummer → Alleen Serienummer (moet Serienummer ondersteunen)
 
-SWAP EXECUTION:
-- [ ] Update device_identifiers.product_version_id
-- [ ] Create entry in product_version_history table:
+### wijziging uitvoering
+- [ ] Werk device_identifiers.product_version_id bij (huidige productversie)
+- [ ] Behoud delivery_product_version_id (oorspronkelijke levering blijft intact)
+- [ ] Creëer entry in product_version_history tabel:
   - device_identifier_id
   - old_product_version_id
   - new_product_version_id
-  - changed_by (current user)
-  - note (optional reason)
+  - changed_by (huidige gebruiker)
+  - note (optionele reden)
   - timestamp
 
-HISTORY DISPLAY:
-- [ ] Product Version History section on detail page
-- [ ] Table showing all version swaps:
-  - Date/Time
-  - Old Product Version → New Product Version
-  - Changed By
-  - Reason/Note
-- [ ] Links to both old and new product version detail pages
+### geschiedenis weergave
+- [ ] Productversie Geschiedenis sectie op detailpagina
+- [ ] Tabel met alle versie wijzigingen:
+  - Datum/Tijd
+  - Oude Productversie → Nieuwe Productversie
+  - Gewijzigd Door
+  - Reden/Notitie
+- [ ] Links naar zowel oude als nieuwe productversie detailpagina's
 
-BUSINESS RULES:
-- [ ] IMEI and serial numbers remain unchanged
-- [ ] Device status remains unchanged
-- [ ] All swaps are logged permanently
-- [ ] Purchase order links may be affected (document this risk)
-- [ ] User must be authorized to perform swaps
+### bedrijfsregels
+- [ ] IMEI en serienummers blijven ongewijzigd
+- [ ] Apparaat status blijft ongewijzigd
+- [ ] Levering registratie is immutable (delivery_id en oorspronkelijke productversie)
+- [ ] Leveringsdetails reflecteren altijd wat daadwerkelijk geleverd werd
+- [ ] Huidige productversie kan afwijken van geleverde productversie
+- [ ] Alle wijzigingen worden permanent gelogd als post-delivery correcties
+- [ ] Inkooporder koppelingen blijven gekoppeld aan oorspronkelijke leveringsdata
+- [ ] Gebruiker moet geautoriseerd zijn om wijzigingen uit te voeren
 
-IMPACT WARNINGS:
-- [ ] Show compatibility check results
-- [ ] Warn about potential purchase order impacts
-- [ ] Confirm tracking mode changes
-- [ ] Display summary of what will change
+### impact waarschuwingen
+- [ ] Toon compatibiliteitscontrole resultaten
+- [ ] Waarschuw voor mogelijke inkooporder impacts
+- [ ] Bevestig tracking modus wijzigingen
+- [ ] Toon samenvatting van wat er zal wijzigen
 
-UI REQUIREMENTS:
-- [ ] Clear modal with old vs new product version
-- [ ] Dropdown filtered to show only compatible versions
-- [ ] Validation messages for incompatible selections
-- [ ] Confirmation dialog with impact summary
-- [ ] Success notification with updated information
+### gebruikersinterface vereisten
+- [ ] Duidelijke interface met oude vs nieuwe productversie
+- [ ] Dropdown gefilterd om alleen compatibele versies te tonen
+- [ ] Validatie berichten voor incompatibele selecties
+- [ ] Bevestigingsdialoog met impact samenvatting
+- [ ] Succesbericht met bijgewerkte informatie
 
-EDGE CASES:
-- [ ] Handle if new product version gets deleted later
-- [ ] Show historical product version names even if deleted
-- [ ] Prevent circular swaps or excessive swap history
+### leveringspagina integratie
+- [ ] Rood pijl icoon (→) tonen na identifier die een productversie swap heeft ondergaan
+- [ ] Icoon wordt getoond direct na IMEI of serienummer zonder extra tekst
+- [ ] Hover tooltip toont: "Productversie gewijzigd na levering naar: [nieuwe versie]"
+- [ ] Leveringsdetail blijft oorspronkelijke geleverde productversie tonen (immutable)
+- [ ] Geen onnodige productversie tekst of labels op leveringspagina
+- [ ] Minimalistisch ontwerp: alleen identifier + alert icoon
+- [ ] Leveringsstatistieken blijven gebaseerd op oorspronkelijke productversies
+
+### randgevallen
+- [ ] Behandel situatie als nieuwe productversie later wordt verwijderd
+- [ ] Toon historische productversie namen ook als verwijderd
+- [ ] Voorkom circulaire swaps of excessieve swap geschiedenis
 
 STORY POINTS: 6
 PRIORITY: Medium (Correction functionality)  

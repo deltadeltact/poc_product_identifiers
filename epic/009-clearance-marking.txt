@@ -1,4 +1,4 @@
-USER STORY: Uitverkoop/Bargain Basement Markering
+USER STORY: Uitverkoop/Clearance Markering
 
 Als magazijnmanager
 Wil ik individuele items markeren als uitverkoop producten
@@ -7,9 +7,9 @@ Zodat ze apart verkocht kunnen worden tegen gereduceerde prijzen met speciale be
 ACCEPTATIECRITERIA:
 
 UITVERKOOP MARKERING FUNCTIONALITEIT:
-- [ ] "Markeren als Uitverkoop" knop op identifier detailpagina (alleen voor op_voorraad items)
-- [ ] Modal dialoog met formulier velden:
-  - Uitverkoop checkbox (aan/uit)
+- [ ] "Markeren als Uitverkoop" functie op identifier detailpagina (alleen voor op_voorraad items)
+- [ ] Gebruikersinterface voor uitverkoop markering met velden:
+  - Uitverkoop status schakelaar (aan/uit)
   - Uitverkoop Prijs veld (optioneel, decimaal)
   - Uitverkoop Reden veld (optionele tekst, bijv. "Doos beschadigd", "Showmodel")
 
@@ -25,9 +25,9 @@ UITVERKOOP OVERZICHT PAGINA:
   - Acties (Uitverkoop Status Verwijderen, Bewerken)
 
 DATABASE WIJZIGINGEN:
-- [ ] Voeg uitverkoop velden toe aan device_identifiers tabel:
+- [ ] Uitverkoop velden toevoegen aan device_identifiers entiteit:
   - is_clearance (boolean, standaard false)
-  - clearance_price (decimal, nullable)
+  - clearance_price (decimal, nullable)  
   - clearance_reason (text, nullable)
   - clearance_date (datetime, nullable)
 

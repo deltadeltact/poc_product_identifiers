@@ -14,7 +14,7 @@ db.serialize(() => {
             name TEXT NOT NULL,
             ean TEXT,
             tracking_mode TEXT NOT NULL DEFAULT 'none' 
-                CHECK (tracking_mode IN ('none', 'imei', 'serial', 'both')),
+                CHECK (tracking_mode IN ('none', 'imei', 'serial')),
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -25,6 +25,7 @@ db.serialize(() => {
         CREATE TABLE IF NOT EXISTS device_identifiers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_version_id INTEGER NOT NULL,
+            original_product_version_id INTEGER,
             delivery_id INTEGER,
             imei TEXT,
             serial_number TEXT,
@@ -38,6 +39,7 @@ db.serialize(() => {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (product_version_id) REFERENCES product_versions (id),
+            FOREIGN KEY (original_product_version_id) REFERENCES product_versions (id),
             FOREIGN KEY (delivery_id) REFERENCES deliveries (id),
             UNIQUE(imei),
             UNIQUE(serial_number)
@@ -152,7 +154,7 @@ db.serialize(() => {
     
     // Sample product versions
     db.run(`INSERT OR IGNORE INTO product_versions (id, name, ean, tracking_mode) VALUES 
-        (1, 'iPhone 14 Pro 128GB', '1234567890123', 'both'),
+        (1, 'iPhone 14 Pro 128GB', '1234567890123', 'imei'),
         (2, 'Samsung Galaxy S23', '1234567890124', 'imei'),
         (3, 'MacBook Pro 13"', '1234567890125', 'serial'),
         (4, 'AirPods Pro', '1234567890126', 'none')
@@ -160,8 +162,8 @@ db.serialize(() => {
 
     // Sample device identifiers
     db.run(`INSERT OR IGNORE INTO device_identifiers (product_version_id, imei, serial_number, status) VALUES 
-        (1, '351234567890123', 'F2LLD1234567', 'in_stock'),
-        (1, '351234567890124', 'F2LLD1234568', 'in_stock'),
+        (1, '351234567890123', NULL, 'in_stock'),
+        (1, '351234567890124', NULL, 'in_stock'),
         (2, '351234567890125', NULL, 'in_stock'),
         (2, '351234567890126', NULL, 'sold'),
         (3, NULL, 'C02Y1234ABCD', 'in_stock')

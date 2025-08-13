@@ -9,7 +9,7 @@ FASE 1: FUNDAMENT (Stories 001-003)
 Prioriteit: HOOG - Moet eerst voltooid worden
 Duur: 2-3 sprints
 - Database setup en kern schema
-- Project structuur en basis web interface  
+- Applicatie architectuur en basis interface  
 - Productversie beheer met tracking configuratie
 Oplevering: Basis productbeheersysteem
 
@@ -37,13 +37,13 @@ Duur: 4-6 sprints
 - Rapportage en analytics dashboard
 Oplevering: Productie-klaar systeem met volledige functieset
 
-TECHNISCHE STACK:
-- Backend: Node.js + Express
-- Database: SQLite (POC) / PostgreSQL (Productie)
-- Frontend: EJS templates + Bootstrap 5 + JavaScript
-- Authenticatie: Passport.js (Fase 4)
-- API: RESTful endpoints met JSON (Fase 4)
-- Charts: Chart.js (Fase 4)
+TECHNISCHE OVERWEGINGEN:
+- Backend: Web framework naar keuze (REST API aanbevolen)
+- Database: Relationele database (PostgreSQL, MySQL, SQL Server)
+- Frontend: Modern UI framework (React, Vue, Angular) of server-side rendering
+- Authenticatie: Industrie-standaard auth oplossing
+- API: RESTful of GraphQL endpoints
+- Reporting: Charting library voor visualisaties
 
 STORY POINT SAMENVATTING:
 - Fase 1: 10 punten

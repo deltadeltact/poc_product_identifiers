@@ -1,0 +1,354 @@
+FUNCTIONAL REQUIREMENTS: Identifier Tracking Systeem
+========================================================
+
+DATUM: 13 Augustus 2025
+PROJECT: Product Identifier Tracking System
+
+OVERZICHT
+=========
+Dit document beschrijft de complete functionele requirements voor een uitgebreid 
+product identifier tracking systeem dat producten beheert op individueel 
+IMEI/serienummer niveau met configureerbare tracking modi en complete audit trails.
+
+1. PRODUCTVERSIE BEHEER
+======================
+
+1.1 Productversie CRUD Operaties
+- Productversies aanmaken, bewerken, bekijken en verwijderen
+- Verplichte velden: naam
+- Optionele velden: EAN (13 cijfers, uniek indien opgegeven)
+- Tracking configuratie per productversie
+
+1.2 Tracking Modi Configuratie
+- Geen tracking: Bulk voorraad zonder individuele identifiers
+- IMEI tracking: Individuele tracking via IMEI nummers
+- Serienummer tracking: Individuele tracking via serienummers
+
+1.3 Productversie Overzicht
+- Tabel met alle productversies en hun eigenschappen
+- Kolommen: Naam, EAN, Tracking Modus, Voorraad Aantal, Totaal Identifiers
+- Kleurgecodeerde badges voor tracking modi
+- Zoek en filter functionaliteit
+
+2. LEVERINGSBEHEER
+==================
+
+2.1 Levering Workflow
+- Leveringen aanmaken in "Concept" status
+- Leveringsnummer (verplicht, uniek)
+- Leveringsdatum (verplicht, standaard vandaag)
+- Leverancier (optioneel)
+
+2.2 Productregels Toevoegen
+- Productversie selectie via dropdown
+- Hoeveelheid specificatie
+- Dynamische identifier invoer gebaseerd op tracking modus
+- JavaScript validatie voor unieke identifiers
+
+2.3 Levering Boeken
+- Status wijziging van "Concept" naar "Geboekt"
+- Automatische creatie van device_identifier records
+- Initiële status: "op_voorraad"
+- Creatie van status_history entries
+- Leveringen worden immutable na boeken
+
+2.4 Leveringsoverzicht
+- Lijst alle leveringen met status badges
+- Kolommen: Nummer, Datum, Leverancier, Regels, Totaal Items, Status
+- Klik functionaliteit naar detailpagina
+
+3. IDENTIFIER BEHEER
+====================
+
+3.1 Identifier Registratie
+- Automatische registratie tijdens leveringsboeking
+- IMEI nummers (15 cijfers, globaal uniek)
+- Serienummers (alphanumeriek, globaal uniek)
+- Koppeling aan productversie en levering
+- Original values bewaren voor audit trail
+
+3.2 Identifier Zoeken
+- Geavanceerd zoekformulier met filters
+- Zoeken op IMEI of serienummer (tekstueel)
+- Filter op productversie (dropdown)
+- Filter op status (dropdown)
+- Paginering voor grote resultaatsets
+
+3.3 Identifier Detail Pagina
+- Volledige identifier informatie
+- IMEI/serienummer weergave
+- Productversie koppeling (klikbaar)
+- Huidige status met kleurcodering
+- Aanmaak en wijzigingsdatums
+- Leveringsinformatie
+
+4. VOORRAADOVERZICHT
+====================
+
+4.1 Voorraad Dashboard  
+- Overzicht per productversie
+- Tracking modus indicators
+- Huidige voorraad aantallen
+- Acties: Details bekijken, Identifiers bekijken
+
+4.2 Voorraad Logica
+- Voor getrackte items: Aantal identifiers met status "op_voorraad"
+- Voor bulk items: Quantity veld in bulk_stock tabel
+- Real-time updates bij statuswijzigingen
+
+4.3 Bulk Voorraad Beheer
+- Handmatige aanpassingen voor niet-getrackte producten
+- Plus/minus kwantiteit wijzigingen
+- Notitie veld voor reden
+- Geschiedenis tracking van alle wijzigingen
+
+5. STATUS BEHEER
+================
+
+5.1 Status Types
+- op_voorraad: Item beschikbaar voor verkoop
+- verkocht: Item verkocht aan klant
+- defect: Item beschadigd of defect
+- vermist: Item niet vindbaar in voorraad
+- gereserveerd: Item gereserveerd voor klant
+
+5.2 Status Wijzigingen
+- Status wijziging via identifier detailpagina
+- Dropdown met beschikbare statussen
+- Optioneel notitie veld
+- Automatische logging in status_history
+- Timestamp en gebruiker registratie
+
+6. CORRECTIE WORKFLOWS
+======================
+
+6.1 Identifier Swaps (IMEI/Serienummer Correcties)
+- Wijziging van IMEI of serienummer na registratie
+- Alleen mogelijk voor items met status "op_voorraad"
+- Nieuwe waarde moet uniek zijn in systeem
+- Validatie gebaseerd op productversie tracking modus
+- Complete geschiedenis logging
+- Originele waarden behouden voor delivery audit
+
+6.2 Productversie Swaps (Herclassificatie)
+- Wijziging van productversie na registratie
+- Alleen mogelijk voor items met status "op_voorraad"
+- Tracking modus compatibility checking
+- IMEI en serienummers blijven ongewijzigd
+- Leveringsrelatie blijft intact (immutable)
+- Complete geschiedenis logging
+
+6.3 Leveringspagina Alert Systeem
+- Geel waarschuwings icoon (⚠️) voor identifier swaps
+- Rood pijl icoon (→) voor productversie swaps
+- Iconen direct na identifier zonder extra tekst
+- Hover tooltips met detail informatie
+- Leveringsdata blijft origineel (wat werd geleverd)
+
+7. CLEARANCE/UITVERKOOP BEHEER
+==============================
+
+7.1 Clearance Markering
+- Items markeren als uitverkoop product
+- Alleen mogelijk voor status "op_voorraad"
+- Clearance prijs (optioneel, moet positief zijn)
+- Clearance reden (optioneel tekst veld)
+- Datum van markering automatisch
+
+7.2 Clearance Overzicht
+- Aparte pagina of sectie voor uitverkoop items
+- Filter opties in identifier zoeken
+- Bulk clearance operaties (toekomstige uitbreiding)
+- Rapportage mogelijkheden
+
+8. AUDIT TRAIL & GESCHIEDENIS
+==============================
+
+8.1 Status Geschiedenis
+- Alle statuswijzigingen per identifier
+- Oude status → nieuwe status logging
+- Gebruiker en timestamp registratie
+- Optionele notitie per wijziging
+
+8.2 Productversie Geschiedenis  
+- Alle productversie swaps per identifier
+- Oude versie → nieuwe versie logging
+- Gebruiker en timestamp registratie
+- Optionele notitie per wijziging
+
+8.3 Identifier Geschiedenis
+- Alle IMEI/serienummer wijzigingen per identifier
+- Oude waarde → nieuwe waarde logging
+- Gebruiker en timestamp registratie
+- Optionele notitie per wijziging
+
+8.4 Bulk Voorraad Geschiedenis
+- Alle kwantiteit wijzigingen voor bulk items
+- Plus/minus wijzigingen met oude/nieuwe waarden
+- Gebruiker en timestamp registratie
+- Notitie per wijziging verplicht
+
+9. GEBRUIKERSINTERFACE VEREISTEN
+================================
+
+9.1 Algemene UI Principes
+- Moderne, responsieve interface (desktop en mobiel)
+- Professioneel en consistent design systeem
+- Intuïtieve navigatie en workflows
+- Toegankelijkheid (WCAG compliance)
+- Performance optimalisaties
+
+9.2 Navigatie Structuur
+- Dashboard (hoofdpagina)
+- Productversies (beheer en overzicht)
+- Leveringen (aanmaken en overzicht)
+- Identifiers (zoeken en beheer)
+- Voorraad (overzicht en statistieken)
+
+9.3 Formulieren en Validatie
+- Real-time client-side validatie
+- Duidelijke error messages
+- Bevestigingsdialogen voor kritieke acties
+- Success notificaties na voltooiing
+- Automatische form field focusing
+
+9.4 Tabellen en Overzichten
+- Sorteerbare kolommen
+- Zoek en filter functionaliteit
+- Paginering voor grote datasets
+- Export mogelijkheden (toekomstige uitbreiding)
+- Responsive table design
+
+10. BEDRIJFSREGELS
+==================
+
+10.1 Data Integriteit
+- IMEI nummers zijn globaal uniek
+- Serienummers zijn globaal uniek
+- EAN codes zijn uniek indien opgegeven
+- Leveringsnummers zijn uniek
+- Alle wijzigingen worden permanent gelogd
+
+10.2 Workflow Regels
+- Leveringen in concept kunnen bewerkt/verwijderd worden
+- Geboekte leveringen zijn immutable (alleen-lezen)
+- Identifier/productversie swaps alleen voor "op_voorraad" items
+- Clearance markering alleen voor "op_voorraad" items
+- Status wijzigingen naar elke geldige status mogelijk
+
+10.3 Tracking Mode Regels
+- "Geen" → "IMEI" of "Serienummer" mogelijk
+- "IMEI" → alleen "IMEI" mogelijk
+- "Serienummer" → alleen "Serienummer" mogelijk
+- Swaps tussen IMEI en Serienummer tracking zijn verboden
+
+10.4 Leveringsintegriteit
+- Originele leveringsdata blijft altijd intact
+- Leveringspagina toont wat daadwerkelijk geleverd werd
+- Post-delivery correcties wijzigen leveringsdata niet
+- Inkooporders blijven gekoppeld aan originele leveringsdata
+- Leveringsstatistieken gebaseerd op oorspronkelijke data
+
+11. TECHNISCHE VEREISTEN
+========================
+
+11.1 Database Vereisten
+- Relationele database (PostgreSQL/MySQL/SQL Server)
+- ACID compliance voor data integriteit
+- Foreign key constraints en referential integrity
+- Indexing voor performance op zoekkolommen
+- Backup en restore procedures
+
+11.2 Applicatie Architectuur
+- Web-based applicatie (browser toegankelijk)
+- RESTful API architectuur (toekomstige uitbreiding)
+- Stateless server design
+- Session management voor gebruikers
+- Error logging en monitoring
+
+11.3 Performance Vereisten
+- Response tijd < 2 seconden voor normale operaties
+- Support voor 10,000+ identifiers
+- Concurrent gebruiker ondersteuning
+- Database query optimalisatie
+- Efficiënte memory gebruik
+
+11.4 Security Vereisten
+- Gebruikersauthenticatie (toekomstige uitbreiding)
+- Autorisatie per functionaliteit
+- SQL injection preventie
+- XSS attack preventie
+- HTTPS in productie omgeving
+
+12. TESTING VEREISTEN
+=====================
+
+12.1 Functionele Tests
+- Unit tests voor bedrijfslogica
+- Integration tests voor database operaties
+- End-to-end tests voor gebruikers workflows
+- Regression tests voor bug preventie
+
+12.2 Performance Tests
+- Load testing met grote datasets
+- Stress testing onder hoge belasting
+- Memory leak detection
+- Database performance tuning
+
+12.3 Usability Tests
+- User experience testing
+- Browser compatibility testing
+- Mobile responsiveness testing
+- Accessibility compliance testing
+
+13. RAPPORTAGE & ANALYTICS (TOEKOMSTIG)
+=======================================
+
+13.1 Standaard Rapporten
+- Voorraad overzicht per productversie
+- Leveringen per periode
+- Status distributie analytics
+- Clearance items overzicht
+
+13.2 Dashboard Widgets  
+- Totaal productversies
+- Totaal items op voorraad
+- Recente activiteit feed
+- Low stock waarschuwingen
+
+13.3 Export Functionaliteit
+- CSV export van tabellen
+- PDF rapporten generatie
+- Excel export mogelijkheden
+- API endpoints voor externe integratie
+
+14. INTEGRATIE MOGELIJKHEDEN (TOEKOMSTIG)
+=========================================
+
+14.1 API Endpoints
+- RESTful API voor alle CRUD operaties
+- JSON data format
+- API authentication en rate limiting
+- Comprehensive API documentation
+
+14.2 Externe Systemen
+- ERP systeem integratie
+- E-commerce platform koppeling
+- Barcode scanner support
+- Inventory management system sync
+
+14.3 Import/Export
+- Bulk import van productversies
+- Bulk import van leveringen
+- Data migration tools
+- Backup/restore procedures
+
+PRIORITERING
+============
+
+FASE 1 (MVP): Requirements 1-6, 8, 9.1-9.3, 10, 11.1-11.2
+FASE 2 (Uitbreidingen): Requirement 7, 9.4, 11.3-11.4, 12
+FASE 3 (Analytics): Requirements 13, 14.1
+FASE 4 (Volledige integratie): Requirements 14.2-14.3
+
+TOTAAL GESCHATTE COMPLEXITEIT: 69 Story Points

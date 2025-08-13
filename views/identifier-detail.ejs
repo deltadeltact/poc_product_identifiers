@@ -362,8 +362,7 @@
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>Trackingconfiguratie:</strong> 
-                        <%= identifier.tracking_mode === 'both' ? 'IMEI + Serienummer' : 
-                            identifier.tracking_mode === 'imei' ? 'IMEI' : 
+                        <%= identifier.tracking_mode === 'imei' ? 'IMEI' : 
                             identifier.tracking_mode === 'serial' ? 'Serienummer' : 'Geen tracking' %>
                     </div>
                     
@@ -371,13 +370,13 @@
                     <div class="mb-3">
                         <label class="form-label">Huidige waarden (alleen-lezen)</label>
                         <div class="row g-2">
-                            <% if (identifier.tracking_mode === 'imei' || identifier.tracking_mode === 'both') { %>
+                            <% if (identifier.tracking_mode === 'imei' ) { %>
                                 <div class="col-md-6">
                                     <input type="text" class="form-control" value="<%= identifier.imei || 'Niet ingesteld' %>" readonly>
                                     <small class="form-text text-muted">Huidige IMEI</small>
                                 </div>
                             <% } %>
-                            <% if (identifier.tracking_mode === 'serial' || identifier.tracking_mode === 'both') { %>
+                            <% if (identifier.tracking_mode === 'serial' ) { %>
                                 <div class="col-md-6">
                                     <input type="text" class="form-control" value="<%= identifier.serial_number || 'Niet ingesteld' %>" readonly>
                                     <small class="form-text text-muted">Huidig serienummer</small>
@@ -388,11 +387,11 @@
 
                     <!-- New Values -->
                     <div class="row g-3">
-                        <% if (identifier.tracking_mode === 'imei' || identifier.tracking_mode === 'both') { %>
+                        <% if (identifier.tracking_mode === 'imei' ) { %>
                             <div class="col-md-6">
                                 <label for="new_imei" class="form-label">
                                     Nieuw IMEI 
-                                    <% if (identifier.tracking_mode === 'imei' || identifier.tracking_mode === 'both') { %>
+                                    <% if (identifier.tracking_mode === 'imei' ) { %>
                                         <span class="text-danger">*</span>
                                     <% } %>
                                 </label>
@@ -402,14 +401,14 @@
                                     id="new_imei" 
                                     name="new_imei" 
                                     placeholder="Voer nieuw IMEI in"
-                                    <%= (identifier.tracking_mode === 'imei' || identifier.tracking_mode === 'both') ? 'required' : '' %>>
+                                    <%= (identifier.tracking_mode === 'imei' ) ? 'required' : '' %>>
                             </div>
                         <% } %>
-                        <% if (identifier.tracking_mode === 'serial' || identifier.tracking_mode === 'both') { %>
+                        <% if (identifier.tracking_mode === 'serial' ) { %>
                             <div class="col-md-6">
                                 <label for="new_serial_number" class="form-label">
                                     Nieuw serienummer 
-                                    <% if (identifier.tracking_mode === 'serial' || identifier.tracking_mode === 'both') { %>
+                                    <% if (identifier.tracking_mode === 'serial' ) { %>
                                         <span class="text-danger">*</span>
                                     <% } %>
                                 </label>
@@ -419,7 +418,7 @@
                                     id="new_serial_number" 
                                     name="new_serial_number" 
                                     placeholder="Voer nieuw serienummer in"
-                                    <%= (identifier.tracking_mode === 'serial' || identifier.tracking_mode === 'both') ? 'required' : '' %>>
+                                    <%= (identifier.tracking_mode === 'serial' ) ? 'required' : '' %>>
                             </div>
                         <% } %>
                     </div>
@@ -519,14 +518,13 @@
                                     <option value="<%= pv.id %>" data-tracking="<%= pv.tracking_mode %>">
                                         <%= pv.name %> 
                                         <% if (pv.ean) { %>(EAN: <%= pv.ean %>)<% } %>
-                                        - <%= pv.tracking_mode === 'both' ? 'IMEI + Serienummer' : 
-                                              pv.tracking_mode === 'imei' ? 'IMEI' : 
+                                        - <%= pv.tracking_mode === 'imei' ? 'IMEI' : 
                                               pv.tracking_mode === 'serial' ? 'Serienummer' : 'Geen tracking' %>
                                     </option>
                                 <% }); %>
                             <% } %>
                         </select>
-                        <small class="form-text text-muted">Alleen productversies met dezelfde trackingconfiguratie (<%= identifier.tracking_mode === 'both' ? 'IMEI + Serienummer' : identifier.tracking_mode === 'imei' ? 'IMEI' : identifier.tracking_mode === 'serial' ? 'Serienummer' : 'Geen tracking' %>) worden weergegeven.</small>
+                        <small class="form-text text-muted">Alleen productversies met dezelfde trackingconfiguratie (<%= identifier.tracking_mode === 'imei' ? 'IMEI' : identifier.tracking_mode === 'serial' ? 'Serienummer' : 'Geen tracking' %>) worden weergegeven.</small>
                     </div>
                     
                     <!-- No Compatible Versions Warning -->
@@ -573,7 +571,7 @@ document.querySelector('#swapModal form')?.addEventListener('submit', function(e
     // Check if at least one required field is provided based on tracking mode
     let hasValidInput = false;
     
-    if (trackingMode === 'imei' || trackingMode === 'both') {
+    if (trackingMode === 'imei') {
         if (newImei && newImei !== currentImei) {
             hasValidInput = true;
         } else if ((trackingMode === 'imei') && !newImei) {
@@ -583,7 +581,7 @@ document.querySelector('#swapModal form')?.addEventListener('submit', function(e
         }
     }
     
-    if (trackingMode === 'serial' || trackingMode === 'both') {
+    if (trackingMode === 'serial') {
         if (newSerial && newSerial !== currentSerial) {
             hasValidInput = true;
         } else if ((trackingMode === 'serial') && !newSerial) {
@@ -593,12 +591,7 @@ document.querySelector('#swapModal form')?.addEventListener('submit', function(e
         }
     }
     
-    // Check if both values are identical to current (no change)
-    if ((trackingMode === 'both') && newImei === currentImei && newSerial === currentSerial) {
-        e.preventDefault();
-        alert('Nieuwe waarden moeten verschillen van de huidige waarden.');
-        return false;
-    }
+    // No need to check for 'both' mode anymore since it's removed
     
     // For single tracking modes, check if the value is the same
     if ((trackingMode === 'imei') && newImei === currentImei) {
