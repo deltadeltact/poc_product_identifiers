@@ -43,10 +43,18 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label for="clearance" class="form-label">Koopje</label>
+                    <select class="form-select" id="clearance" name="clearance">
+                        <option value="">Alle items</option>
+                        <option value="true" <%= filters.clearance === 'true' ? 'selected' : '' %>>Alleen koopjes</option>
+                        <option value="false" <%= filters.clearance === 'false' ? 'selected' : '' %>>Reguliere items</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
                     <label class="form-label">&nbsp;</label>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i> Zoeken
+                            <i class="fas fa-search"></i>
                         </button>
                     </div>
                 </div>
@@ -79,6 +87,7 @@
                             <th>Serienummer</th>
                             <th>Productversie</th>
                             <th>Status</th>
+                            <th>Koopje</th>
                             <th>Acties</th>
                         </tr>
                     </thead>
@@ -139,6 +148,19 @@
                                     <span class="badge <%= statusClass %>">
                                         <%= statusText %>
                                     </span>
+                                </td>
+                                <td>
+                                    <% if (identifier.is_clearance) { %>
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-tag me-1"></i>
+                                            Koopje
+                                        </span>
+                                        <% if (identifier.clearance_price) { %>
+                                            <br><small class="text-muted">€<%= parseFloat(identifier.clearance_price).toFixed(2) %></small>
+                                        <% } %>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                    <% } %>
                                 </td>
                                 <td>
                                     <a href="/identifiers/<%= identifier.id %>" class="btn btn-sm btn-outline-primary">

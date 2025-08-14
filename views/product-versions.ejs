@@ -32,6 +32,7 @@
                             <th>EAN</th>
                             <th>Trackingconfiguratie</th>
                             <th>Voorraad</th>
+                            <th>Koopjes</th>
                             <th>Totaal Identifiers</th>
                             <th>Acties</th>
                         </tr>
@@ -72,9 +73,23 @@
                                     <% if (pv.tracking_mode === 'none') { %>
                                         <span class="text-muted">N.v.t.</span>
                                     <% } else { %>
-                                        <span class="badge bg-primary">
+                                        <span class="badge bg-success">
                                             <%= pv.stock_count || 0 %>
                                         </span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (pv.tracking_mode === 'none') { %>
+                                        <span class="text-muted">N.v.t.</span>
+                                    <% } else { %>
+                                        <% if ((pv.clearance_count || 0) > 0) { %>
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-tag me-1"></i>
+                                                <%= pv.clearance_count %>
+                                            </span>
+                                        <% } else { %>
+                                            <span class="text-muted">0</span>
+                                        <% } %>
                                     <% } %>
                                 </td>
                                 <td>

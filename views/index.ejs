@@ -108,10 +108,12 @@
                     <div class="col-md-6">
                         <h6>Nog te implementeren:</h6>
                         <ul class="list-unstyled">
-                            <li><i class="fas fa-clock text-warning me-2"></i> Leveringen inboeken</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Leveringen inboeken</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Inkoopprijzen tracking</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Koopjeskelder beheer</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Mobile retail scenario</li>
                             <li><i class="fas fa-clock text-warning me-2"></i> Identifier swaps</li>
                             <li><i class="fas fa-clock text-warning me-2"></i> Productversie swaps</li>
-                            <li><i class="fas fa-clock text-warning me-2"></i> Koopjeskelder markering</li>
                         </ul>
                     </div>
                 </div>
@@ -119,5 +121,103 @@
         </div>
     </div>
 </div>
+
+<!-- Admin Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tools me-2"></i>
+                    Admin Tools
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text mb-3">
+                    <strong>Database Reset:</strong> Reset de database naar de initiële mobile retail testdata. 
+                    Dit verwijdert alle huidige gegevens en laadt verse voorbeelddata.
+                </p>
+                <button type="button" class="btn btn-danger" onclick="resetDatabase()">
+                    <i class="fas fa-database me-2"></i>
+                    Reset Database
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Confirmation Modal -->
+<div class="modal fade" id="resetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Database Reset Bevestiging</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>WAARSCHUWING:</strong> Dit zal alle huidige data permanent verwijderen!
+                </div>
+                <p>Deze actie zal:</p>
+                <ul>
+                    <li>Alle huidige productversies, identifiers en leveringen verwijderen</li>
+                    <li>De database resetten naar verse mobile retail testdata</li>
+                    <li>Koopjeskelder en inkoopprijs functionaliteit herstellen</li>
+                </ul>
+                <p><strong>Dit kan niet ongedaan worden gemaakt.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                <button type="button" class="btn btn-danger" onclick="confirmReset()">
+                    <i class="fas fa-database me-2"></i>
+                    Ja, Reset Database
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function resetDatabase() {
+    const modal = new bootstrap.Modal(document.getElementById('resetModal'));
+    modal.show();
+}
+
+function confirmReset() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('resetModal'));
+    modal.hide();
+    
+    // Show loading state
+    const resetButton = document.querySelector('button[onclick="resetDatabase()"]');
+    const originalText = resetButton.innerHTML;
+    resetButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Resetting...';
+    resetButton.disabled = true;
+    
+    fetch('/admin/reset-database', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message + '\n\nDe pagina wordt nu ververst om de nieuwe data te laden.');
+            window.location.reload();
+        } else {
+            alert('❌ Database reset mislukt: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Reset failed:', error);
+        alert('❌ Database reset mislukt: ' + error.message);
+    })
+    .finally(() => {
+        resetButton.innerHTML = originalText;
+        resetButton.disabled = false;
+    });
+}
+</script>
 
 <%- include('partials/footer') %>

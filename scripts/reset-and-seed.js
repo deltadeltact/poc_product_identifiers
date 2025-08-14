@@ -1,143 +1,328 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
 const dbPath = path.join(__dirname, '..', 'database.sqlite');
+
+console.log('=== DATABASE RESET AND RESEED ===');
+console.log('This will completely reset the database and restore initial sample data.');
+console.log('WARNING: All existing data will be permanently lost!');
+
+// Delete existing database file if it exists
+if (fs.existsSync(dbPath)) {
+    console.log('Deleting existing database...');
+    fs.unlinkSync(dbPath);
+    console.log('Existing database deleted.');
+}
+
+// Create new database
 const db = new sqlite3.Database(dbPath);
 
-console.log('Resetting and seeding database...');
+console.log('Creating fresh database with initial schema and data...');
 
 db.serialize(() => {
-    // Clear all existing data
-    console.log('Clearing existing data...');
+    // Product versions table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS product_versions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            ean TEXT,
+            tracking_mode TEXT NOT NULL DEFAULT 'none' 
+                CHECK (tracking_mode IN ('none', 'imei', 'serial')),
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // Device identifiers table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS device_identifiers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_version_id INTEGER NOT NULL,
+            original_product_version_id INTEGER,
+            delivery_id INTEGER,
+            imei TEXT,
+            serial_number TEXT,
+            original_imei TEXT,
+            original_serial_number TEXT,
+            status TEXT NOT NULL DEFAULT 'in_stock' 
+                CHECK (status IN ('in_stock', 'sold', 'defective', 'missing', 'reserved')),
+            is_clearance BOOLEAN DEFAULT FALSE,
+            clearance_price DECIMAL(10,2),
+            clearance_reason TEXT,
+            purchase_price DECIMAL(10,2),
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (product_version_id) REFERENCES product_versions (id),
+            FOREIGN KEY (original_product_version_id) REFERENCES product_versions (id),
+            FOREIGN KEY (delivery_id) REFERENCES deliveries (id),
+            UNIQUE(imei),
+            UNIQUE(serial_number)
+        )
+    `);
+
+    // Status history table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS status_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_identifier_id INTEGER NOT NULL,
+            old_status TEXT,
+            new_status TEXT NOT NULL,
+            changed_by TEXT NOT NULL DEFAULT 'system',
+            note TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (device_identifier_id) REFERENCES device_identifiers (id)
+        )
+    `);
+
+    // Product version swap history table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS product_version_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_identifier_id INTEGER NOT NULL,
+            old_product_version_id INTEGER NOT NULL,
+            new_product_version_id INTEGER NOT NULL,
+            changed_by TEXT NOT NULL DEFAULT 'system',
+            note TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (device_identifier_id) REFERENCES device_identifiers (id),
+            FOREIGN KEY (old_product_version_id) REFERENCES product_versions (id),
+            FOREIGN KEY (new_product_version_id) REFERENCES product_versions (id)
+        )
+    `);
+
+    // Identifier swap history table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS identifier_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_identifier_id INTEGER NOT NULL,
+            old_imei TEXT,
+            new_imei TEXT,
+            old_serial_number TEXT,
+            new_serial_number TEXT,
+            changed_by TEXT NOT NULL DEFAULT 'system',
+            note TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (device_identifier_id) REFERENCES device_identifiers (id)
+        )
+    `);
+
+    // Deliveries table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS deliveries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            delivery_number TEXT NOT NULL UNIQUE,
+            delivery_date DATE NOT NULL,
+            supplier TEXT,
+            status TEXT NOT NULL DEFAULT 'concept' 
+                CHECK (status IN ('concept', 'booked', 'partially_booked')),
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // Delivery lines table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS delivery_lines (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            delivery_id INTEGER NOT NULL,
+            product_version_id INTEGER NOT NULL,
+            quantity INTEGER NOT NULL,
+            purchase_price_per_unit DECIMAL(10,2) NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (delivery_id) REFERENCES deliveries (id),
+            FOREIGN KEY (product_version_id) REFERENCES product_versions (id)
+        )
+    `);
+
+    // Bulk stock table for non-tracked products
+    db.run(`
+        CREATE TABLE IF NOT EXISTS bulk_stock (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_version_id INTEGER NOT NULL,
+            quantity INTEGER NOT NULL DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (product_version_id) REFERENCES product_versions (id),
+            UNIQUE(product_version_id)
+        )
+    `);
+
+    // Bulk stock history table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS bulk_stock_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_version_id INTEGER NOT NULL,
+            old_quantity INTEGER NOT NULL,
+            new_quantity INTEGER NOT NULL,
+            change_quantity INTEGER NOT NULL,
+            changed_by TEXT NOT NULL DEFAULT 'system',
+            note TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (product_version_id) REFERENCES product_versions (id)
+        )
+    `);
+
+    console.log('Database schema created successfully!');
     
-    // Delete in correct order to respect foreign key constraints
-    db.run(`DELETE FROM bulk_stock_history`);
-    db.run(`DELETE FROM bulk_stock`);
-    db.run(`DELETE FROM identifier_history`);
-    db.run(`DELETE FROM product_version_history`);
-    db.run(`DELETE FROM status_history`);
-    db.run(`DELETE FROM delivery_lines`);
-    db.run(`DELETE FROM deliveries`);
-    db.run(`DELETE FROM device_identifiers`);
-    db.run(`DELETE FROM product_versions`);
+    // Insert some sample data
+    console.log('Inserting fresh sample data...');
     
-    // Reset auto-increment counters
-    db.run(`DELETE FROM sqlite_sequence WHERE name IN ('product_versions', 'device_identifiers', 'deliveries', 'delivery_lines', 'status_history', 'product_version_history', 'identifier_history', 'bulk_stock', 'bulk_stock_history')`);
-    
-    console.log('Creating new seed data...');
-    
-    // Insert new product versions with specific categories
-    db.run(`INSERT INTO product_versions (id, name, ean, tracking_mode) VALUES 
-        -- Phones with IMEI tracking
-        (1, 'iPhone 15 Pro 128GB', '8410201234567', 'imei'),
-        (2, 'Samsung Galaxy S24 Ultra', '8809876543210', 'imei'),
-        
-        -- Electronics with serial number tracking  
-        (3, 'AirPods Pro 2nd Gen', '1234567890123', 'serial'),
-        (4, 'Samsung Galaxy Watch 6', '9876543210987', 'serial'),
-        
-        -- Phone accessories without tracking
-        (5, 'Phone Case Clear', '5432167890123', 'none'),
-        (6, 'Screen Protector Premium', '6789012345678', 'none')
+    // Sample product versions - Mobile Retail Focus
+    db.run(`INSERT OR IGNORE INTO product_versions (id, name, ean, tracking_mode) VALUES 
+        -- Phones (IMEI tracking)
+        (1, 'iPhone 15 Pro 128GB Space Black', '1234567890101', 'imei'),
+        (2, 'iPhone 15 256GB Blue', '1234567890102', 'imei'),
+        (3, 'Samsung Galaxy S24 128GB Phantom Black', '1234567890103', 'imei'),
+        (4, 'Samsung Galaxy S24 Ultra 256GB Titanium Gray', '1234567890104', 'imei'),
+        (5, 'Google Pixel 8 Pro 128GB Bay Blue', '1234567890105', 'imei'),
+        -- Smartwatches (Serial tracking)
+        (6, 'Apple Watch Series 9 45mm Midnight', '1234567890106', 'serial'),
+        (7, 'Samsung Galaxy Watch 6 44mm Silver', '1234567890107', 'serial'),
+        (8, 'Apple Watch SE 40mm Starlight', '1234567890108', 'serial'),
+        -- Accessories (No tracking - bulk)
+        (9, 'AirPods Pro 3rd Gen', '1234567890109', 'none'),
+        (10, 'iPhone 15 Pro Silicone Case Black', '1234567890110', 'none'),
+        (11, 'iPhone 15 Screen Protector Tempered Glass', '1234567890111', 'none'),
+        (12, 'Samsung Galaxy S24 Clear Case', '1234567890112', 'none'),
+        (13, 'USB-C to Lightning Cable 1m', '1234567890113', 'none')
     `);
 
-    // Add deliveries with specific timestamps
-    db.run(`INSERT INTO deliveries (id, delivery_number, delivery_date, supplier, status, created_at, updated_at) VALUES 
-        (1, 'WS0001', '2025-08-10', 'Apple Inc.', 'booked', '2025-08-10 09:00:00', '2025-08-10 09:00:00'),
-        (2, 'WS0002', '2025-08-11', 'Samsung Electronics', 'booked', '2025-08-11 10:30:00', '2025-08-11 10:30:00'),
-        (3, 'WS0003', '2025-08-11', 'Apple Inc.', 'booked', '2025-08-11 14:15:00', '2025-08-11 14:15:00'),
-        (4, 'WS0004', '2025-08-12', 'Samsung Electronics', 'booked', '2025-08-12 08:45:00', '2025-08-12 08:45:00'),
-        (5, 'WS0005', '2025-08-12', 'Accessory Supplier', 'booked', '2025-08-12 11:20:00', '2025-08-12 11:20:00'),
-        (6, 'WS0006', '2025-08-12', 'Screen Protection Co.', 'booked', '2025-08-12 13:10:00', '2025-08-12 13:10:00')
+    // Sample deliveries
+    db.run(`INSERT OR IGNORE INTO deliveries (id, delivery_number, delivery_date, supplier, status) VALUES 
+        (1, 'DEL-2025-001', '2025-01-10', 'Apple Distribution Europe', 'booked'),
+        (2, 'DEL-2025-002', '2025-01-12', 'Samsung Electronics Benelux', 'booked'),
+        (3, 'DEL-2025-003', '2025-01-15', 'Mobile Accessories Wholesale', 'booked')
     `);
 
-    // Add delivery lines with more realistic quantities
-    db.run(`INSERT INTO delivery_lines (delivery_id, product_version_id, quantity, created_at) VALUES 
-        (1, 1, 3, '2025-08-10 09:05:00'),  -- WS0001: 3x iPhone 15 Pro 128GB
-        (2, 2, 2, '2025-08-11 10:35:00'),  -- WS0002: 2x Samsung Galaxy S24 Ultra
-        (3, 3, 4, '2025-08-11 14:20:00'),  -- WS0003: 4x AirPods Pro 2nd Gen
-        (4, 4, 2, '2025-08-12 08:50:00'),  -- WS0004: 2x Samsung Galaxy Watch 6
-        (5, 5, 10, '2025-08-12 11:25:00'), -- WS0005: 10x Phone Case Clear
-        (6, 6, 15, '2025-08-12 13:15:00')  -- WS0006: 15x Screen Protector Premium
+    // Sample delivery lines with purchase prices
+    db.run(`INSERT OR IGNORE INTO delivery_lines (id, delivery_id, product_version_id, quantity, purchase_price_per_unit) VALUES 
+        -- Apple Delivery (DEL-2025-001)
+        (1, 1, 1, 15, 899.00),  -- iPhone 15 Pro 128GB
+        (2, 1, 2, 12, 749.00),  -- iPhone 15 256GB
+        (3, 1, 6, 8, 399.00),   -- Apple Watch Series 9
+        (4, 1, 8, 6, 259.00),   -- Apple Watch SE
+        (5, 1, 9, 25, 249.00),  -- AirPods Pro
+        (6, 1, 10, 30, 45.00),  -- iPhone Cases
+        -- Samsung Delivery (DEL-2025-002)  
+        (7, 2, 3, 12, 649.00),  -- Galaxy S24
+        (8, 2, 4, 8, 949.00),   -- Galaxy S24 Ultra
+        (9, 2, 7, 6, 299.00),   -- Galaxy Watch 6
+        (10, 2, 12, 40, 25.00), -- Samsung Cases
+        -- Accessories Delivery (DEL-2025-003)
+        (11, 3, 5, 10, 699.00), -- Pixel 8 Pro
+        (12, 3, 11, 50, 15.00), -- Screen Protectors  
+        (13, 3, 13, 30, 19.00)  -- USB-C Cables
     `);
 
-    // Add individual identifiers for tracked products with delivery_id references
-    db.run(`INSERT INTO device_identifiers (product_version_id, original_product_version_id, delivery_id, imei, serial_number, original_imei, original_serial_number, status, created_at, updated_at) VALUES 
-        -- iPhone 15 Pro (IMEI tracking) - Delivery WS0001 (delivery_id = 1)
-        (1, 1, 1, '351234567890001', NULL, '351234567890001', NULL, 'in_stock', '2025-08-10 09:10:00', '2025-08-10 09:10:00'),
-        (1, 1, 1, '351234567890002', NULL, '351234567890002', NULL, 'in_stock', '2025-08-10 09:11:00', '2025-08-10 09:11:00'),
-        (1, 1, 1, '351234567890003', NULL, '351234567890003', NULL, 'sold', '2025-08-10 09:12:00', '2025-08-11 15:30:00'),
-        
-        -- Samsung Galaxy S24 Ultra (IMEI tracking) - Delivery WS0002 (delivery_id = 2)
-        (2, 2, 2, '351876543210001', NULL, '351876543210001', NULL, 'in_stock', '2025-08-11 10:40:00', '2025-08-11 10:40:00'),
-        (2, 2, 2, '351876543210002', NULL, '351876543210002', NULL, 'in_stock', '2025-08-11 10:41:00', '2025-08-11 10:41:00'),
-        
-        -- AirPods Pro (Serial tracking) - Delivery WS0003 (delivery_id = 3)
-        (3, 3, 3, NULL, 'AP2024001', NULL, 'AP2024001', 'in_stock', '2025-08-11 14:25:00', '2025-08-11 14:25:00'),
-        (3, 3, 3, NULL, 'AP2024002', NULL, 'AP2024002', 'in_stock', '2025-08-11 14:26:00', '2025-08-11 14:26:00'),
-        (3, 3, 3, NULL, 'AP2024003', NULL, 'AP2024003', 'sold', '2025-08-11 14:27:00', '2025-08-12 10:15:00'),
-        (3, 3, 3, NULL, 'AP2024004', NULL, 'AP2024004', 'in_stock', '2025-08-11 14:28:00', '2025-08-11 14:28:00'),
-        
-        -- Galaxy Watch (Serial tracking) - Delivery WS0004 (delivery_id = 4)
-        (4, 4, 4, NULL, 'GW2024001', NULL, 'GW2024001', 'in_stock', '2025-08-12 08:55:00', '2025-08-12 08:55:00'),
-        (4, 4, 4, NULL, 'GW2024002', NULL, 'GW2024002', 'in_stock', '2025-08-12 08:56:00', '2025-08-12 08:56:00')
+    // Sample device identifiers with delivery links and purchase prices
+    db.run(`INSERT OR IGNORE INTO device_identifiers (
+        product_version_id, original_product_version_id, delivery_id, 
+        imei, serial_number, original_imei, original_serial_number, 
+        status, purchase_price
+    ) VALUES 
+        -- iPhone 15 Pro from DEL-2025-001
+        (1, 1, 1, '351234567890101', NULL, '351234567890101', NULL, 'in_stock', 899.00),
+        (1, 1, 1, '351234567890102', NULL, '351234567890102', NULL, 'in_stock', 899.00),
+        (1, 1, 1, '351234567890103', NULL, '351234567890103', NULL, 'sold', 899.00),
+        (1, 1, 1, '351234567890104', NULL, '351234567890104', NULL, 'in_stock', 899.00),
+        (1, 1, 1, '351234567890105', NULL, '351234567890105', NULL, 'in_stock', 899.00),
+        -- iPhone 15 from DEL-2025-001
+        (2, 2, 1, '351234567890201', NULL, '351234567890201', NULL, 'in_stock', 749.00),
+        (2, 2, 1, '351234567890202', NULL, '351234567890202', NULL, 'in_stock', 749.00),
+        (2, 2, 1, '351234567890203', NULL, '351234567890203', NULL, 'reserved', 749.00),
+        -- Galaxy S24 from DEL-2025-002
+        (3, 3, 2, '351234567890301', NULL, '351234567890301', NULL, 'in_stock', 649.00),
+        (3, 3, 2, '351234567890302', NULL, '351234567890302', NULL, 'in_stock', 649.00),
+        (3, 3, 2, '351234567890303', NULL, '351234567890303', NULL, 'sold', 649.00),
+        -- Galaxy S24 Ultra from DEL-2025-002
+        (4, 4, 2, '351234567890401', NULL, '351234567890401', NULL, 'in_stock', 949.00),
+        (4, 4, 2, '351234567890402', NULL, '351234567890402', NULL, 'in_stock', 949.00),
+        -- Pixel 8 Pro from DEL-2025-003
+        (5, 5, 3, '351234567890501', NULL, '351234567890501', NULL, 'in_stock', 699.00),
+        (5, 5, 3, '351234567890502', NULL, '351234567890502', NULL, 'defective', 699.00),
+        -- Apple Watch Series 9 from DEL-2025-001
+        (6, 6, 1, NULL, 'AW9M45001', NULL, 'AW9M45001', 'in_stock', 399.00),
+        (6, 6, 1, NULL, 'AW9M45002', NULL, 'AW9M45002', 'in_stock', 399.00),
+        (6, 6, 1, NULL, 'AW9M45003', NULL, 'AW9M45003', 'sold', 399.00),
+        -- Galaxy Watch 6 from DEL-2025-002
+        (7, 7, 2, NULL, 'GW6S44001', NULL, 'GW6S44001', 'in_stock', 299.00),
+        (7, 7, 2, NULL, 'GW6S44002', NULL, 'GW6S44002', 'in_stock', 299.00),
+        -- Apple Watch SE from DEL-2025-001
+        (8, 8, 1, NULL, 'AWSE40001', NULL, 'AWSE40001', 'in_stock', 259.00),
+        (8, 8, 1, NULL, 'AWSE40002', NULL, 'AWSE40002', 'missing', 259.00)
     `);
 
-    // Add bulk stock for non-tracked products (accessories)
-    db.run(`INSERT INTO bulk_stock (product_version_id, quantity, created_at, updated_at) VALUES 
-        (5, 10, '2025-08-12 11:30:00', '2025-08-12 11:30:00'),  -- Phone Case Clear: 10 pieces
-        (6, 15, '2025-08-12 13:20:00', '2025-08-12 13:20:00')   -- Screen Protector Premium: 15 pieces  
+    // Sample status history for all identifiers
+    db.run(`INSERT OR IGNORE INTO status_history (device_identifier_id, old_status, new_status, changed_by, note) VALUES 
+        (1, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (2, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (3, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
+        (4, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (5, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (6, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (7, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (8, 'in_stock', 'reserved', 'admin', 'Gereserveerd voor klant'),
+        (9, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
+        (10, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
+        (11, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
+        (12, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
+        (13, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
+        (14, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-003'),
+        (15, 'in_stock', 'defective', 'admin', 'Scherm beschadigd bij controle'),
+        (16, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (17, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (18, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
+        (19, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
+        (20, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
+        (21, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (22, 'in_stock', 'missing', 'admin', 'Niet gevonden bij inventarisatie')
     `);
 
-    // Add initial status history for tracked identifiers
-    db.run(`INSERT INTO status_history (device_identifier_id, old_status, new_status, changed_by, note, created_at) VALUES 
-        (1, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001', '2025-08-10 09:10:00'),
-        (2, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001', '2025-08-10 09:11:00'),
-        (3, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001', '2025-08-10 09:12:00'),
-        (3, 'in_stock', 'sold', 'admin', 'Verkocht aan klant', '2025-08-11 15:30:00'),
-        (4, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002', '2025-08-11 10:40:00'),
-        (5, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002', '2025-08-11 10:41:00'),
-        (6, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0003', '2025-08-11 14:25:00'),
-        (7, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0003', '2025-08-11 14:26:00'),
-        (8, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0003', '2025-08-11 14:27:00'),
-        (8, 'in_stock', 'sold', 'admin', 'Verkocht aan klant', '2025-08-12 10:15:00'),
-        (9, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0003', '2025-08-11 14:28:00'),
-        (10, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0004', '2025-08-12 08:55:00'),
-        (11, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0004', '2025-08-12 08:56:00')
+    // Sample bulk stock for non-tracked products with purchase price history
+    db.run(`INSERT OR IGNORE INTO bulk_stock (product_version_id, quantity) VALUES 
+        (9, 22),   -- AirPods Pro (3 sold from original 25)
+        (10, 25),  -- iPhone Cases (5 sold from original 30)
+        (11, 45),  -- Screen Protectors (5 sold from original 50)
+        (12, 35),  -- Samsung Cases (5 sold from original 40)
+        (13, 28)   -- USB-C Cables (2 sold from original 30)
     `);
 
-    // Add initial bulk stock history for non-tracked products
-    db.run(`INSERT INTO bulk_stock_history (product_version_id, old_quantity, new_quantity, change_quantity, changed_by, note, created_at) VALUES 
-        (5, 0, 10, 10, 'system', 'Ingeboekt via levering WS0005', '2025-08-12 11:30:00'),
-        (6, 0, 15, 15, 'system', 'Ingeboekt via levering WS0006', '2025-08-12 13:20:00')
+    // Sample bulk stock history
+    db.run(`INSERT OR IGNORE INTO bulk_stock_history (product_version_id, old_quantity, new_quantity, change_quantity, changed_by, note) VALUES 
+        (9, 0, 25, 25, 'system', 'Delivery booking DEL-2025-001'),
+        (9, 25, 22, -3, 'admin', 'Verkoop aan klanten'),
+        (10, 0, 30, 30, 'system', 'Delivery booking DEL-2025-001'),
+        (10, 30, 25, -5, 'admin', 'Verkoop aan klanten'),
+        (11, 0, 50, 50, 'system', 'Delivery booking DEL-2025-003'),
+        (11, 50, 45, -5, 'admin', 'Verkoop aan klanten'),
+        (12, 0, 40, 40, 'system', 'Delivery booking DEL-2025-002'),
+        (12, 40, 35, -5, 'admin', 'Verkoop aan klanten'),
+        (13, 0, 30, 30, 'system', 'Delivery booking DEL-2025-003'),
+        (13, 30, 28, -2, 'admin', 'Verkoop aan klanten')
     `);
 
-    console.log('New seed data created successfully!');
+    console.log('Fresh sample data inserted successfully!');
     console.log('');
-    console.log('Product structure:');
-    console.log('- Phones (IMEI tracking): iPhone 15 Pro, Samsung Galaxy S24 Ultra');
-    console.log('- Electronics (Serial tracking): AirPods Pro, Galaxy Watch 6');
-    console.log('- Accessories (No tracking): Phone Case, Screen Protector');
+    console.log('=== DATABASE RESET COMPLETED ===');
+    console.log('The database has been completely reset with fresh mobile retail sample data.');
     console.log('');
-    console.log('Deliveries created with identifiers:');
-    console.log('- WS0001 (2025-08-10): 3x iPhone 15 Pro from Apple Inc.');
-    console.log('  └─ IMEI: 351234567890001, 351234567890002, 351234567890003 (sold)');
-    console.log('- WS0002 (2025-08-11): 2x Samsung Galaxy S24 Ultra from Samsung Electronics');
-    console.log('  └─ IMEI: 351876543210001, 351876543210002');
-    console.log('- WS0003 (2025-08-11): 4x AirPods Pro from Apple Inc.');
-    console.log('  └─ Serial: AP2024001, AP2024002, AP2024003 (sold), AP2024004');
-    console.log('- WS0004 (2025-08-12): 2x Galaxy Watch 6 from Samsung Electronics');
-    console.log('  └─ Serial: GW2024001, GW2024002');
-    console.log('- WS0005 (2025-08-12): 10x Phone Case from Accessory Supplier (bulk stock)');
-    console.log('- WS0006 (2025-08-12): 15x Screen Protector from Screen Protection Co. (bulk stock)');
+    console.log('📱 Mobile Retail Inventory:');
+    console.log('• 5 Phone models (iPhone 15 Pro/15, Galaxy S24/S24 Ultra, Pixel 8 Pro)');
+    console.log('• 3 Smartwatch models (Apple Watch Series 9/SE, Galaxy Watch 6)');
+    console.log('• 5 Accessory types (AirPods, Cases, Screen Protectors, Cables)');
     console.log('');
-    console.log('Stock status:');
-    console.log('- 2x iPhone 15 Pro in stock, 1x sold');
-    console.log('- 2x Samsung Galaxy S24 Ultra in stock');
-    console.log('- 3x AirPods Pro in stock, 1x sold');
-    console.log('- 2x Galaxy Watch 6 in stock');
-    console.log('- 10x Phone Case in bulk stock');
-    console.log('- 15x Screen Protector in bulk stock');
+    console.log('📦 Sample Deliveries:');
+    console.log('• DEL-2025-001: Apple products (€32,024 total value)');
+    console.log('• DEL-2025-002: Samsung products (€19,488 total value)');
+    console.log('• DEL-2025-003: Mixed accessories (€7,740 total value)');
+    console.log('');
+    console.log('🏪 Ready Features:');
+    console.log('• Complete purchase price tracking');
+    console.log('• Koopjeskelder (clearance) management');
+    console.log('• Full delivery traceability');
+    console.log('• Realistic mobile retail scenario');
+    console.log('');
 });
 
 db.close((err) => {

@@ -36,7 +36,8 @@ app.get('/product-versions', (req, res) => {
         LEFT JOIN (
             SELECT product_version_id, 
                    COUNT(*) as total_identifiers,
-                   COUNT(CASE WHEN status = 'in_stock' THEN 1 END) as stock_count
+                   COUNT(CASE WHEN status = 'in_stock' AND (is_clearance IS NULL OR is_clearance = FALSE) THEN 1 END) as stock_count,
+                   COUNT(CASE WHEN status = 'in_stock' AND is_clearance = TRUE THEN 1 END) as clearance_count
             FROM device_identifiers 
             GROUP BY product_version_id
         ) di_count ON pv.id = di_count.product_version_id
@@ -170,7 +171,7 @@ app.get('/product-versions/:id', (req, res) => {
 
 // Identifiers routes
 app.get('/identifiers', (req, res) => {
-    const { search, product_version, status } = req.query;
+    const { search, product_version, status, clearance } = req.query;
     
     let query = `
         SELECT di.*, pv.name as product_version_name
@@ -195,6 +196,14 @@ app.get('/identifiers', (req, res) => {
         params.push(status);
     }
     
+    if (clearance) {
+        if (clearance === 'true') {
+            query += ` AND di.is_clearance = TRUE`;
+        } else if (clearance === 'false') {
+            query += ` AND (di.is_clearance = FALSE OR di.is_clearance IS NULL)`;
+        }
+    }
+    
     query += ` ORDER BY di.id DESC`;
     
     db.all(query, params, (err, identifiers) => {
@@ -213,7 +222,7 @@ app.get('/identifiers', (req, res) => {
             res.render('identifiers', { 
                 identifiers: identifiers,
                 productVersions: productVersions,
-                filters: { search, product_version, status }
+                filters: { search, product_version, status, clearance }
             });
         });
     });
@@ -313,7 +322,9 @@ app.get('/stock', (req, res) => {
         FROM product_versions pv
         LEFT JOIN bulk_stock bs ON pv.id = bs.product_version_id
         LEFT JOIN (
-            SELECT product_version_id, COUNT(*) as stock_count
+            SELECT product_version_id, 
+                   COUNT(CASE WHEN is_clearance IS NULL OR is_clearance = FALSE THEN 1 END) as stock_count,
+                   COUNT(CASE WHEN is_clearance = TRUE THEN 1 END) as clearance_count
             FROM device_identifiers 
             WHERE status = 'in_stock'
             GROUP BY product_version_id
@@ -617,6 +628,119 @@ app.post('/identifiers/:id/status', (req, res) => {
     });
 });
 
+// Clearance management routes
+app.post('/identifiers/:id/toggle-clearance', (req, res) => {
+    const identifierId = req.params.id;
+    const { clearance_price, clearance_reason, remove_clearance } = req.body;
+    
+    // Get current identifier details
+    db.get(`SELECT status, is_clearance FROM device_identifiers WHERE id = ?`, [identifierId], (err, current) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: err.message });
+        }
+        
+        if (!current) {
+            return res.redirect(`/identifiers/${identifierId}?error=${encodeURIComponent('Identifier niet gevonden')}`);
+        }
+        
+        // Validation: Only allow clearance marking for 'in_stock' items
+        if (current.status !== 'in_stock') {
+            return res.redirect(`/identifiers/${identifierId}?error=${encodeURIComponent('Alleen items met status "Op voorraad" kunnen als koopje gemarkeerd worden')}`);
+        }
+        
+        // Determine new clearance status
+        const newClearanceStatus = remove_clearance ? false : !current.is_clearance;
+        
+        // Validation: If setting clearance, validate price
+        if (newClearanceStatus && clearance_price && parseFloat(clearance_price) <= 0) {
+            return res.redirect(`/identifiers/${identifierId}?error=${encodeURIComponent('Koopjesprijs moet positief zijn')}`);
+        }
+        
+        // Update clearance status
+        const updateQuery = newClearanceStatus ? 
+            `UPDATE device_identifiers 
+             SET is_clearance = TRUE, 
+                 clearance_price = ?, 
+                 clearance_reason = ?,
+                 updated_at = CURRENT_TIMESTAMP 
+             WHERE id = ?` :
+            `UPDATE device_identifiers 
+             SET is_clearance = FALSE, 
+                 clearance_price = NULL, 
+                 clearance_reason = NULL,
+                 updated_at = CURRENT_TIMESTAMP 
+             WHERE id = ?`;
+        
+        const params = newClearanceStatus ? 
+            [clearance_price || null, clearance_reason || null, identifierId] :
+            [identifierId];
+        
+        db.run(updateQuery, params, function(err) {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: err.message });
+            }
+            
+            const action = newClearanceStatus ? 'gemarkeerd als koopje' : 'koopje status verwijderd';
+            const successMessage = `Identifier succesvol ${action}`;
+            
+            res.redirect(`/identifiers/${identifierId}?success=${encodeURIComponent(successMessage)}`);
+        });
+    });
+});
+
+// Clearance overview route
+app.get('/clearance', (req, res) => {
+    const { product_version, sort_by = 'created_at', sort_order = 'DESC' } = req.query;
+    
+    let query = `
+        SELECT di.*, pv.name as product_version_name
+        FROM device_identifiers di
+        JOIN product_versions pv ON di.product_version_id = pv.id
+        WHERE di.is_clearance = TRUE AND di.status = 'in_stock'
+    `;
+    let params = [];
+    
+    if (product_version) {
+        query += ` AND di.product_version_id = ?`;
+        params.push(product_version);
+    }
+    
+    // Add sorting
+    const validSortColumns = ['created_at', 'clearance_price', 'product_version_name'];
+    const validSortOrders = ['ASC', 'DESC'];
+    const sortColumn = validSortColumns.includes(sort_by) ? sort_by : 'created_at';
+    const sortOrder = validSortOrders.includes(sort_order.toUpperCase()) ? sort_order.toUpperCase() : 'DESC';
+    
+    if (sortColumn === 'product_version_name') {
+        query += ` ORDER BY pv.name ${sortOrder}`;
+    } else {
+        query += ` ORDER BY di.${sortColumn} ${sortOrder}`;
+    }
+    
+    db.all(query, params, (err, clearanceItems) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: err.message });
+        }
+        
+        // Get product versions for filter dropdown
+        db.all(`SELECT * FROM product_versions ORDER BY name`, (err, productVersions) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: err.message });
+            }
+            
+            res.render('clearance', { 
+                clearanceItems: clearanceItems,
+                productVersions: productVersions,
+                filters: { product_version, sort_by, sort_order }
+            });
+        });
+    });
+});
+
 // Deliveries routes
 app.get('/deliveries', (req, res) => {
     db.all(`
@@ -748,7 +872,7 @@ app.get('/deliveries/:id', (req, res) => {
 
 app.post('/deliveries/:id/lines', (req, res) => {
     const deliveryId = req.params.id;
-    const { product_version_id, quantity, identifiers } = req.body;
+    const { product_version_id, quantity, purchase_price_per_unit, identifiers } = req.body;
     
     // First check the tracking mode of the product version
     db.get(`SELECT tracking_mode FROM product_versions WHERE id = ?`, [product_version_id], (err, productVersion) => {
@@ -757,11 +881,16 @@ app.post('/deliveries/:id/lines', (req, res) => {
             return res.status(500).json({ error: err.message });
         }
         
+        // Validate purchase price
+        if (!purchase_price_per_unit || parseFloat(purchase_price_per_unit) <= 0) {
+            return res.status(400).json({ error: 'Purchase price per unit is required and must be positive' });
+        }
+
         // Add the delivery line
         db.run(`
-            INSERT INTO delivery_lines (delivery_id, product_version_id, quantity)
-            VALUES (?, ?, ?)
-        `, [deliveryId, product_version_id, quantity], function(err) {
+            INSERT INTO delivery_lines (delivery_id, product_version_id, quantity, purchase_price_per_unit)
+            VALUES (?, ?, ?, ?)
+        `, [deliveryId, product_version_id, quantity, parseFloat(purchase_price_per_unit)], function(err) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({ error: err.message });
@@ -802,15 +931,15 @@ app.post('/deliveries/:id/lines', (req, res) => {
                 // For tracked items, add individual identifiers
                 if (identifiers && Array.isArray(identifiers) && identifiers.length > 0) {
                     const stmt = db.prepare(`
-                        INSERT INTO device_identifiers (product_version_id, original_product_version_id, delivery_id, imei, serial_number, original_imei, original_serial_number, status)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, 'in_stock')
+                        INSERT INTO device_identifiers (product_version_id, original_product_version_id, delivery_id, imei, serial_number, original_imei, original_serial_number, status, purchase_price)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, 'in_stock', ?)
                     `);
                     
                     identifiers.forEach(identifier => {
                         if (identifier && (identifier.imei || identifier.serial_number)) {
                             const imei = identifier.imei || null;
                             const serialNumber = identifier.serial_number || null;
-                            stmt.run([product_version_id, product_version_id, deliveryId, imei, serialNumber, imei, serialNumber]);
+                            stmt.run([product_version_id, product_version_id, deliveryId, imei, serialNumber, imei, serialNumber, parseFloat(purchase_price_per_unit)]);
                         }
                     });
                     
@@ -854,6 +983,36 @@ app.post('/deliveries/:id/book', (req, res) => {
             }
             
             res.redirect(`/deliveries/${deliveryId}`);
+        });
+    });
+});
+
+// Admin routes
+app.post('/admin/reset-database', (req, res) => {
+    const { exec } = require('child_process');
+    
+    console.log('Admin database reset requested...');
+    
+    // Execute the reset script
+    exec('npm run reset-db', { cwd: __dirname }, (error, stdout, stderr) => {
+        if (error) {
+            console.error('Database reset failed:', error);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'Database reset failed: ' + error.message 
+            });
+        }
+        
+        if (stderr) {
+            console.warn('Database reset warnings:', stderr);
+        }
+        
+        console.log('Database reset completed successfully');
+        console.log(stdout);
+        
+        res.json({ 
+            success: true, 
+            message: 'Database has been successfully reset to initial mobile retail data.' 
         });
     });
 });

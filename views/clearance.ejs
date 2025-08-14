@@ -1,0 +1,350 @@
+<%- include('partials/header', { title: 'Koopjeskelder' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-tags me-2"></i>
+        Koopjeskelder
+    </h1>
+    <div>
+        <span class="badge bg-warning fs-6">
+            <i class="fas fa-tag me-1"></i>
+            <%= clearanceItems.length %> items
+        </span>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="/clearance">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="product_version" class="form-label">Productversie</label>
+                    <select class="form-select" id="product_version" name="product_version">
+                        <option value="">Alle productversies</option>
+                        <% productVersions.forEach(pv => { %>
+                            <option value="<%= pv.id %>" <%= filters.product_version == pv.id ? 'selected' : '' %>>
+                                <%= pv.name %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="sort_by" class="form-label">Sorteren op</label>
+                    <select class="form-select" id="sort_by" name="sort_by">
+                        <option value="created_at" <%= filters.sort_by === 'created_at' ? 'selected' : '' %>>Datum toegevoegd</option>
+                        <option value="clearance_price" <%= filters.sort_by === 'clearance_price' ? 'selected' : '' %>>Koopjesprijs</option>
+                        <option value="product_version_name" <%= filters.sort_by === 'product_version_name' ? 'selected' : '' %>>Productversie</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="sort_order" class="form-label">Volgorde</label>
+                    <select class="form-select" id="sort_order" name="sort_order">
+                        <option value="DESC" <%= filters.sort_order === 'DESC' ? 'selected' : '' %>>Aflopend</option>
+                        <option value="ASC" <%= filters.sort_order === 'ASC' ? 'selected' : '' %>>Oplopend</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<% if (clearanceItems.length > 0) { %>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">
+                        <i class="fas fa-tag fa-2x mb-2"></i><br>
+                        Totaal Items
+                    </h5>
+                    <h3 class="text-warning"><%= clearanceItems.length %></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">
+                        <i class="fas fa-euro-sign fa-2x mb-2"></i><br>
+                        Met Prijs
+                    </h5>
+                    <h3 class="text-success">
+                        <%= clearanceItems.filter(item => item.clearance_price).length %>
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-info">
+                        <i class="fas fa-comment fa-2x mb-2"></i><br>
+                        Met Reden
+                    </h5>
+                    <h3 class="text-info">
+                        <%= clearanceItems.filter(item => item.clearance_reason).length %>
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+<% } %>
+
+<!-- Clearance Items Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            Koopjeskelder Items
+        </h5>
+    </div>
+    <div class="card-body">
+        <% if (clearanceItems.length === 0) { %>
+            <div class="text-center py-5">
+                <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Geen koopjes gevonden</h5>
+                <p class="text-muted">Er zijn momenteel geen items gemarkeerd als koopje.</p>
+                <a href="/identifiers" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>
+                    Zoek identifiers
+                </a>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>IMEI / Serienummer</th>
+                            <th>Productversie</th>
+                            <th>Koopjesprijs</th>
+                            <th>Reden</th>
+                            <th>Datum Gemarkeerd</th>
+                            <th>Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% clearanceItems.forEach(item => { %>
+                            <tr>
+                                <td>
+                                    <a href="/identifiers/<%= item.id %>" class="text-decoration-none">
+                                        #<%= item.id %>
+                                    </a>
+                                </td>
+                                <td>
+                                    <% if (item.imei) { %>
+                                        <code><%= item.imei %></code>
+                                    <% } else if (item.serial_number) { %>
+                                        <code><%= item.serial_number %></code>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <a href="/product-versions/<%= item.product_version_id %>" class="text-decoration-none">
+                                        <%= item.product_version_name %>
+                                    </a>
+                                </td>
+                                <td>
+                                    <% if (item.clearance_price) { %>
+                                        <span class="badge bg-success">
+                                            €<%= parseFloat(item.clearance_price).toFixed(2) %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted">Geen prijs</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (item.clearance_reason) { %>
+                                        <span class="badge bg-info">
+                                            <%= item.clearance_reason %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted">Geen reden</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        <%= new Date(item.updated_at).toLocaleDateString('nl-NL') %>
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="/identifiers/<%= item.id %>" class="btn btn-sm btn-outline-primary" title="Bekijken">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                onclick="editClearance(<%= item.id %>, '<%= item.clearance_price || '' %>', '<%= item.clearance_reason || '' %>')"
+                                                data-bs-toggle="modal" data-bs-target="#editClearanceModal" title="Bewerken">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                onclick="removeClearance(<%= item.id %>)" title="Koopje status verwijderen">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Edit Clearance Modal -->
+<div class="modal fade" id="editClearanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editClearanceForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Koopje bewerken</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="edit_clearance_price" class="form-label">Koopjesprijs</label>
+                            <div class="input-group">
+                                <span class="input-group-text">€</span>
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    id="edit_clearance_price" 
+                                    name="clearance_price" 
+                                    step="0.01"
+                                    min="0.01"
+                                    placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_clearance_reason" class="form-label">Reden</label>
+                            <select class="form-select" id="edit_clearance_reason" name="clearance_reason">
+                                <option value="">Selecteer reden</option>
+                                <option value="Doos beschadigd">Doos beschadigd</option>
+                                <option value="Showmodel">Showmodel</option>
+                                <option value="Laatste exemplaar">Laatste exemplaar</option>
+                                <option value="Seizoensuitverkoop">Seizoensuitverkoop</option>
+                                <option value="Verouderd model">Verouderd model</option>
+                                <option value="Andere reden">Andere reden</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom reason input -->
+                    <div class="mt-3" id="editCustomReasonDiv" style="display: none;">
+                        <label for="edit_custom_reason" class="form-label">Aangepaste reden</label>
+                        <input type="text" class="form-control" id="edit_custom_reason" placeholder="Voer aangepaste reden in">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                    <button type="submit" class="btn btn-warning">Opslaan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Edit clearance function
+function editClearance(id, price, reason) {
+    const form = document.getElementById('editClearanceForm');
+    const priceInput = document.getElementById('edit_clearance_price');
+    const reasonSelect = document.getElementById('edit_clearance_reason');
+    const customDiv = document.getElementById('editCustomReasonDiv');
+    const customInput = document.getElementById('edit_custom_reason');
+    
+    // Set form action
+    form.action = `/identifiers/${id}/toggle-clearance`;
+    
+    // Set current values
+    priceInput.value = price || '';
+    
+    // Handle reason selection
+    const predefinedReasons = ['Doos beschadigd', 'Showmodel', 'Laatste exemplaar', 'Seizoensuitverkoop', 'Verouderd model'];
+    if (predefinedReasons.includes(reason)) {
+        reasonSelect.value = reason;
+        customDiv.style.display = 'none';
+    } else if (reason) {
+        reasonSelect.value = 'Andere reden';
+        customInput.value = reason;
+        customDiv.style.display = 'block';
+    } else {
+        reasonSelect.value = '';
+        customDiv.style.display = 'none';
+    }
+}
+
+// Remove clearance function
+function removeClearance(id) {
+    if (confirm('Weet u zeker dat u de koopje status van dit item wilt verwijderen?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/identifiers/${id}/toggle-clearance`;
+        
+        const removeInput = document.createElement('input');
+        removeInput.type = 'hidden';
+        removeInput.name = 'remove_clearance';
+        removeInput.value = 'true';
+        form.appendChild(removeInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Handle custom reason dropdown in edit modal
+document.getElementById('edit_clearance_reason').addEventListener('change', function() {
+    const customDiv = document.getElementById('editCustomReasonDiv');
+    const customInput = document.getElementById('edit_custom_reason');
+    
+    if (this.value === 'Andere reden') {
+        customDiv.style.display = 'block';
+        customInput.required = true;
+    } else {
+        customDiv.style.display = 'none';
+        customInput.required = false;
+        customInput.value = '';
+    }
+});
+
+// Handle edit form submission
+document.getElementById('editClearanceForm').addEventListener('submit', function(e) {
+    const reasonSelect = document.getElementById('edit_clearance_reason');
+    const customInput = document.getElementById('edit_custom_reason');
+    const priceInput = document.getElementById('edit_clearance_price');
+    
+    // If "Andere reden" is selected, use the custom input value
+    if (reasonSelect.value === 'Andere reden' && customInput.value.trim()) {
+        // Create a hidden input with the custom reason
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'clearance_reason';
+        hiddenInput.value = customInput.value.trim();
+        this.appendChild(hiddenInput);
+        
+        // Clear the select to avoid duplicate values
+        reasonSelect.name = '';
+    }
+    
+    // Validate price if provided
+    if (priceInput.value && parseFloat(priceInput.value) <= 0) {
+        e.preventDefault();
+        alert('Koopjesprijs moet positief zijn');
+        return false;
+    }
+});
+</script>
+
+<%- include('partials/footer') %>

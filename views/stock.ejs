@@ -24,7 +24,8 @@
                         <tr>
                             <th>Productversie</th>
                             <th>Trackingmodus</th>
-                            <th>Voorraad</th>
+                            <th>Reguliere Voorraad</th>
+                            <th>Koopjes</th>
                             <th>Acties</th>
                         </tr>
                     </thead>
@@ -74,7 +75,7 @@
                                         <% } %>
                                     <% } else { %>
                                         <% if (item.stock_count > 0) { %>
-                                            <a href="/identifiers?product_version=<%= item.id %>&status=in_stock" class="text-decoration-none">
+                                            <a href="/identifiers?product_version=<%= item.id %>&status=in_stock&clearance=false" class="text-decoration-none">
                                                 <span class="badge bg-success fs-6">
                                                     <i class="fas fa-boxes me-1"></i>
                                                     <%= item.stock_count %> stuks
@@ -89,12 +90,33 @@
                                     <% } %>
                                 </td>
                                 <td>
+                                    <% if (item.tracking_mode === 'none') { %>
+                                        <span class="text-muted">N.v.t.</span>
+                                    <% } else { %>
+                                        <% if ((item.clearance_count || 0) > 0) { %>
+                                            <a href="/identifiers?product_version=<%= item.id %>&status=in_stock&clearance=true" class="text-decoration-none">
+                                                <span class="badge bg-warning fs-6">
+                                                    <i class="fas fa-tag me-1"></i>
+                                                    <%= item.clearance_count %> koopjes
+                                                </span>
+                                            </a>
+                                        <% } else { %>
+                                            <span class="text-muted">0 koopjes</span>
+                                        <% } %>
+                                    <% } %>
+                                </td>
+                                <td>
                                     <a href="/product-versions/<%= item.id %>" class="btn btn-sm btn-outline-primary me-2">
                                         <i class="fas fa-eye"></i> Bekijken
                                     </a>
-                                    <% if (item.tracking_mode !== 'none' && item.stock_count > 0) { %>
+                                    <% if (item.tracking_mode !== 'none' && (item.stock_count > 0 || (item.clearance_count || 0) > 0)) { %>
                                         <a href="/identifiers?product_version=<%= item.id %>&status=in_stock" class="btn btn-sm btn-outline-success">
                                             <i class="fas fa-list"></i> Identifiers
+                                        </a>
+                                    <% } %>
+                                    <% if (item.tracking_mode !== 'none' && (item.clearance_count || 0) > 0) { %>
+                                        <a href="/clearance?product_version=<%= item.id %>" class="btn btn-sm btn-outline-warning ms-1">
+                                            <i class="fas fa-tags"></i> Koopjes
                                         </a>
                                     <% } %>
                                 </td>

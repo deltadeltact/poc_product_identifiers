@@ -143,17 +143,32 @@
                         min="1" 
                         required>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
+                    <label for="purchase_price_per_unit" class="form-label">Inkoopprijs *</label>
+                    <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        <input 
+                            type="number" 
+                            class="form-control" 
+                            id="purchase_price_per_unit" 
+                            name="purchase_price_per_unit" 
+                            step="0.01"
+                            min="0.01"
+                            placeholder="0.00"
+                            required>
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label">Trackingconfiguratie</label>
                     <div id="trackingInfo" class="form-text">
                         Selecteer eerst een productversie
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <label class="form-label">&nbsp;</label>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Toevoegen
+                            <i class="fas fa-plus"></i>
                         </button>
                     </div>
                 </div>
@@ -195,6 +210,8 @@
                             <th>Productversie</th>
                             <th>Trackingmodus</th>
                             <th>Aantal</th>
+                            <th>Inkoopprijs</th>
+                            <th>Totaal</th>
                             <th>Toegevoegd</th>
                             <% if (delivery.status === 'concept') { %>
                                 <th>Acties</th>
@@ -236,6 +253,22 @@
                                     <span class="badge bg-primary fs-6">
                                         <%= line.quantity %> stuks
                                     </span>
+                                </td>
+                                <td>
+                                    <% if (line.purchase_price_per_unit) { %>
+                                        <span class="badge bg-success">
+                                            €<%= parseFloat(line.purchase_price_per_unit).toFixed(2) %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted">Geen prijs</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (line.purchase_price_per_unit) { %>
+                                        <strong>€<%= (parseFloat(line.purchase_price_per_unit) * line.quantity).toFixed(2) %></strong>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                    <% } %>
                                 </td>
                                 <td><%= new Date(line.created_at).toLocaleDateString('nl-NL') %></td>
                                 <% if (delivery.status === 'concept') { %>
