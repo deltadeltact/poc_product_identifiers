@@ -1,102 +1,150 @@
 <%- include('partials/header', { title: 'Leveringen' }) %>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>
-        <i class="fas fa-truck me-2"></i>
-        Leveringen
+<!-- Page Header -->
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-2xl font-bold text-gray-900 tracking-tight uppercase">
+        LEVERINGEN
     </h1>
-    <a href="/deliveries/new" class="btn btn-primary">
-        <i class="fas fa-plus me-2"></i>
-        Nieuwe levering
-    </a>
+    <button onclick="window.location.href='/deliveries/new'" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
+        <i class="fas fa-plus mr-2"></i>
+        Levering aanmaken
+    </button>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <% if (deliveries.length === 0) { %>
-            <div class="text-center py-5">
-                <i class="fas fa-truck fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Geen leveringen gevonden</h5>
-                <p class="text-muted">Maak je eerste levering aan om voorraad in te boeken.</p>
-                <a href="/deliveries/new" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>
-                    Nieuwe levering
-                </a>
+<!-- Search and Filter Bar -->
+<div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div class="flex flex-1 gap-4 w-full sm:w-auto">
+            <div class="relative flex-1 max-w-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" placeholder="Zoek op leveringsnummer..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
-        <% } else { %>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Leveringsnummer</th>
-                            <th>Leveringsdatum</th>
-                            <th>Leverancier</th>
-                            <th>Aantal regels</th>
-                            <th>Totaal stuks</th>
-                            <th>Status</th>
-                            <th>Acties</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% deliveries.forEach(delivery => { %>
-                            <tr>
-                                <td>
-                                    <a href="/deliveries/<%= delivery.id %>" class="text-decoration-none">
-                                        <strong><%= delivery.delivery_number %></strong>
-                                    </a>
-                                </td>
-                                <td><%= new Date(delivery.delivery_date).toLocaleDateString('nl-NL') %></td>
-                                <td><%= delivery.supplier || '-' %></td>
-                                <td>
-                                    <span class="badge bg-secondary">
-                                        <%= delivery.line_count || 0 %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-primary">
-                                        <%= delivery.total_quantity || 0 %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <% 
-                                        let statusClass = '';
-                                        let statusText = '';
-                                        switch(delivery.status) {
-                                            case 'concept':
-                                                statusClass = 'bg-secondary';
-                                                statusText = 'Concept';
-                                                break;
-                                            case 'booked':
-                                                statusClass = 'bg-success';
-                                                statusText = 'Geboekt';
-                                                break;
-                                            case 'partially_booked':
-                                                statusClass = 'bg-warning';
-                                                statusText = 'Gedeeltelijk geboekt';
-                                                break;
-                                        }
-                                    %>
-                                    <span class="badge <%= statusClass %>">
-                                        <%= statusText %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="/deliveries/<%= delivery.id %>" class="btn btn-sm btn-outline-primary me-2">
-                                        <i class="fas fa-eye"></i> Bekijken
-                                    </a>
-                                    <% if (delivery.status === 'concept') { %>
-                                        <button class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-edit"></i> Bewerken
-                                        </button>
-                                    <% } %>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
+            <div class="relative">
+                <select class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="">Filter op status...</option>
+                    <option value="concept">Concept</option>
+                    <option value="booked">Geboekt</option>
+                    <option value="partially_booked">Gedeeltelijk geboekt</option>
+                </select>
             </div>
-        <% } %>
+        </div>
+        <div class="flex gap-2">
+            <button class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <i class="fas fa-filter mr-2"></i>
+                Filters
+            </button>
+            <button class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <i class="fas fa-download mr-2"></i>
+                Exporteren
+            </button>
+        </div>
     </div>
+</div>
+
+<!-- Main Content -->
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <% if (deliveries.length === 0) { %>
+        <div class="text-center py-12">
+            <i class="fas fa-truck text-4xl text-gray-300 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Geen leveringen gevonden</h3>
+            <p class="text-gray-500 mb-6">Maak je eerste levering aan om voorraad in te boeken.</p>
+            <button onclick="window.location.href='/deliveries/new'" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-plus mr-2"></i>
+                Levering aanmaken
+            </button>
+        </div>
+    <% } else { %>
+        <table class="table-minimal w-full">
+            <thead>
+                <tr>
+                    <th class="w-8">
+                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    </th>
+                    <th class="text-left">
+                        <div class="flex items-center gap-1">
+                            ID
+                            <i class="fas fa-sort-up text-xs text-gray-400"></i>
+                        </div>
+                    </th>
+                    <th class="text-left">Leveringsnummer</th>
+                    <th class="text-left">Datum</th>
+                    <th class="text-left">Leverancier</th>
+                    <th class="text-left">Regels</th>
+                    <th class="text-left">Totaal stuks</th>
+                    <th class="text-left">Status</th>
+                    <th class="text-left">Acties</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% deliveries.forEach(delivery => { %>
+                    <tr class="group">
+                        <td>
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </td>
+                        <td class="font-medium text-gray-900"><%= delivery.id %></td>
+                        <td>
+                            <a href="/deliveries/<%= delivery.id %>" class="text-blue-600 hover:text-blue-800 underline font-medium">
+                                <%= delivery.delivery_number %>
+                            </a>
+                        </td>
+                        <td class="text-gray-600"><%= new Date(delivery.delivery_date).toLocaleDateString('nl-NL') %></td>
+                        <td class="text-gray-600"><%= delivery.supplier || '-' %></td>
+                        <td class="font-medium text-gray-900"><%= delivery.line_count || 0 %></td>
+                        <td class="font-medium text-gray-900"><%= delivery.total_quantity || 0 %></td>
+                        <td>
+                            <% 
+                                let statusClass = '';
+                                let statusText = '';
+                                switch(delivery.status) {
+                                    case 'concept':
+                                        statusClass = 'bg-gray-100 text-gray-700';
+                                        statusText = 'Concept';
+                                        break;
+                                    case 'booked':
+                                        statusClass = 'bg-green-100 text-green-700';
+                                        statusText = 'Geboekt';
+                                        break;
+                                    case 'partially_booked':
+                                        statusClass = 'bg-amber-100 text-amber-700';
+                                        statusText = 'Gedeeltelijk';
+                                        break;
+                                }
+                            %>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= statusClass %>">
+                                <%= statusText %>
+                            </span>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <button onclick="window.location.href='/deliveries/<%= delivery.id %>'" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    Bekijken
+                                </button>
+                                <% if (delivery.status === 'concept') { %>
+                                    <button class="text-gray-600 hover:text-gray-800 text-sm font-medium">
+                                        Bewerken
+                                    </button>
+                                <% } %>
+                            </div>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div class="text-sm text-gray-500">
+                <%= deliveries.length %> resultaten
+            </div>
+            <div class="flex items-center space-x-2">
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">Vorige</button>
+                <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded">1</button>
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">Volgende</button>
+            </div>
+        </div>
+    <% } %>
 </div>
 
 <%- include('partials/footer') %>

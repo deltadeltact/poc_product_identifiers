@@ -190,26 +190,26 @@ db.serialize(() => {
 
     // Sample deliveries
     db.run(`INSERT OR IGNORE INTO deliveries (id, delivery_number, delivery_date, supplier, status) VALUES 
-        (1, 'DEL-2025-001', '2025-01-10', 'Apple Distribution Europe', 'booked'),
-        (2, 'DEL-2025-002', '2025-01-12', 'Samsung Electronics Benelux', 'booked'),
-        (3, 'DEL-2025-003', '2025-01-15', 'Mobile Accessories Wholesale', 'booked')
+        (1, 'WS0001', '2025-01-10', 'Apple Distribution Europe', 'booked'),
+        (2, 'WS0002', '2025-01-12', 'Samsung Electronics Benelux', 'booked'),
+        (3, 'WS0003', '2025-01-15', 'Mobile Accessories Wholesale', 'booked')
     `);
 
     // Sample delivery lines with purchase prices
     db.run(`INSERT OR IGNORE INTO delivery_lines (id, delivery_id, product_version_id, quantity, purchase_price_per_unit) VALUES 
-        -- Apple Delivery (DEL-2025-001)
+        -- Apple Delivery (WS0001)
         (1, 1, 1, 15, 899.00),  -- iPhone 15 Pro 128GB
         (2, 1, 2, 12, 749.00),  -- iPhone 15 256GB
         (3, 1, 6, 8, 399.00),   -- Apple Watch Series 9
         (4, 1, 8, 6, 259.00),   -- Apple Watch SE
         (5, 1, 9, 25, 249.00),  -- AirPods Pro
         (6, 1, 10, 30, 45.00),  -- iPhone Cases
-        -- Samsung Delivery (DEL-2025-002)  
+        -- Samsung Delivery (WS0002)  
         (7, 2, 3, 12, 649.00),  -- Galaxy S24
         (8, 2, 4, 8, 949.00),   -- Galaxy S24 Ultra
         (9, 2, 7, 6, 299.00),   -- Galaxy Watch 6
         (10, 2, 12, 40, 25.00), -- Samsung Cases
-        -- Accessories Delivery (DEL-2025-003)
+        -- Accessories Delivery (WS0003)
         (11, 3, 5, 10, 699.00), -- Pixel 8 Pro
         (12, 3, 11, 50, 15.00), -- Screen Protectors  
         (13, 3, 13, 30, 19.00)  -- USB-C Cables
@@ -221,61 +221,61 @@ db.serialize(() => {
         imei, serial_number, original_imei, original_serial_number, 
         status, purchase_price
     ) VALUES 
-        -- iPhone 15 Pro from DEL-2025-001
+        -- iPhone 15 Pro from WS0001
         (1, 1, 1, '351234567890101', NULL, '351234567890101', NULL, 'in_stock', 899.00),
         (1, 1, 1, '351234567890102', NULL, '351234567890102', NULL, 'in_stock', 899.00),
         (1, 1, 1, '351234567890103', NULL, '351234567890103', NULL, 'sold', 899.00),
         (1, 1, 1, '351234567890104', NULL, '351234567890104', NULL, 'in_stock', 899.00),
         (1, 1, 1, '351234567890105', NULL, '351234567890105', NULL, 'in_stock', 899.00),
-        -- iPhone 15 from DEL-2025-001
+        -- iPhone 15 from WS0001
         (2, 2, 1, '351234567890201', NULL, '351234567890201', NULL, 'in_stock', 749.00),
         (2, 2, 1, '351234567890202', NULL, '351234567890202', NULL, 'in_stock', 749.00),
         (2, 2, 1, '351234567890203', NULL, '351234567890203', NULL, 'reserved', 749.00),
-        -- Galaxy S24 from DEL-2025-002
+        -- Galaxy S24 from WS0002
         (3, 3, 2, '351234567890301', NULL, '351234567890301', NULL, 'in_stock', 649.00),
         (3, 3, 2, '351234567890302', NULL, '351234567890302', NULL, 'in_stock', 649.00),
         (3, 3, 2, '351234567890303', NULL, '351234567890303', NULL, 'sold', 649.00),
-        -- Galaxy S24 Ultra from DEL-2025-002
+        -- Galaxy S24 Ultra from WS0002
         (4, 4, 2, '351234567890401', NULL, '351234567890401', NULL, 'in_stock', 949.00),
         (4, 4, 2, '351234567890402', NULL, '351234567890402', NULL, 'in_stock', 949.00),
-        -- Pixel 8 Pro from DEL-2025-003
+        -- Pixel 8 Pro from WS0003
         (5, 5, 3, '351234567890501', NULL, '351234567890501', NULL, 'in_stock', 699.00),
         (5, 5, 3, '351234567890502', NULL, '351234567890502', NULL, 'defective', 699.00),
-        -- Apple Watch Series 9 from DEL-2025-001
+        -- Apple Watch Series 9 from WS0001
         (6, 6, 1, NULL, 'AW9M45001', NULL, 'AW9M45001', 'in_stock', 399.00),
         (6, 6, 1, NULL, 'AW9M45002', NULL, 'AW9M45002', 'in_stock', 399.00),
         (6, 6, 1, NULL, 'AW9M45003', NULL, 'AW9M45003', 'sold', 399.00),
-        -- Galaxy Watch 6 from DEL-2025-002
+        -- Galaxy Watch 6 from WS0002
         (7, 7, 2, NULL, 'GW6S44001', NULL, 'GW6S44001', 'in_stock', 299.00),
         (7, 7, 2, NULL, 'GW6S44002', NULL, 'GW6S44002', 'in_stock', 299.00),
-        -- Apple Watch SE from DEL-2025-001
+        -- Apple Watch SE from WS0001
         (8, 8, 1, NULL, 'AWSE40001', NULL, 'AWSE40001', 'in_stock', 259.00),
         (8, 8, 1, NULL, 'AWSE40002', NULL, 'AWSE40002', 'missing', 259.00)
     `);
 
     // Sample status history for all identifiers
     db.run(`INSERT OR IGNORE INTO status_history (device_identifier_id, old_status, new_status, changed_by, note) VALUES 
-        (1, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
-        (2, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (1, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+        (2, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
         (3, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
-        (4, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
-        (5, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
-        (6, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
-        (7, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (4, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+        (5, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+        (6, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+        (7, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
         (8, 'in_stock', 'reserved', 'admin', 'Gereserveerd voor klant'),
-        (9, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
-        (10, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
+        (9, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
+        (10, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
         (11, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
-        (12, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
-        (13, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
-        (14, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-003'),
+        (12, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
+        (13, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
+        (14, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0003'),
         (15, 'in_stock', 'defective', 'admin', 'Scherm beschadigd bij controle'),
-        (16, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
-        (17, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (16, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+        (17, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
         (18, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
-        (19, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
-        (20, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-002'),
-        (21, NULL, 'in_stock', 'system', 'Ingeboekt via levering DEL-2025-001'),
+        (19, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
+        (20, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
+        (21, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
         (22, 'in_stock', 'missing', 'admin', 'Niet gevonden bij inventarisatie')
     `);
 
@@ -290,15 +290,15 @@ db.serialize(() => {
 
     // Sample bulk stock history
     db.run(`INSERT OR IGNORE INTO bulk_stock_history (product_version_id, old_quantity, new_quantity, change_quantity, changed_by, note) VALUES 
-        (9, 0, 25, 25, 'system', 'Delivery booking DEL-2025-001'),
+        (9, 0, 25, 25, 'system', 'Delivery booking WS0001'),
         (9, 25, 22, -3, 'admin', 'Verkoop aan klanten'),
-        (10, 0, 30, 30, 'system', 'Delivery booking DEL-2025-001'),
+        (10, 0, 30, 30, 'system', 'Delivery booking WS0001'),
         (10, 30, 25, -5, 'admin', 'Verkoop aan klanten'),
-        (11, 0, 50, 50, 'system', 'Delivery booking DEL-2025-003'),
+        (11, 0, 50, 50, 'system', 'Delivery booking WS0003'),
         (11, 50, 45, -5, 'admin', 'Verkoop aan klanten'),
-        (12, 0, 40, 40, 'system', 'Delivery booking DEL-2025-002'),
+        (12, 0, 40, 40, 'system', 'Delivery booking WS0002'),
         (12, 40, 35, -5, 'admin', 'Verkoop aan klanten'),
-        (13, 0, 30, 30, 'system', 'Delivery booking DEL-2025-003'),
+        (13, 0, 30, 30, 'system', 'Delivery booking WS0003'),
         (13, 30, 28, -2, 'admin', 'Verkoop aan klanten')
     `);
 
@@ -313,9 +313,9 @@ db.serialize(() => {
     console.log('• 5 Accessory types (AirPods, Cases, Screen Protectors, Cables)');
     console.log('');
     console.log('📦 Sample Deliveries:');
-    console.log('• DEL-2025-001: Apple products (€32,024 total value)');
-    console.log('• DEL-2025-002: Samsung products (€19,488 total value)');
-    console.log('• DEL-2025-003: Mixed accessories (€7,740 total value)');
+    console.log('• WS0001: Apple products (€32,024 total value)');
+    console.log('• WS0002: Samsung products (€19,488 total value)');
+    console.log('• WS0003: Mixed accessories (€7,740 total value)');
     console.log('');
     console.log('🏪 Ready Features:');
     console.log('• Complete purchase price tracking');

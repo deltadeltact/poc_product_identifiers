@@ -8,7 +8,7 @@ const PORT = 3000;
 
 // Database connection
 const dbPath = path.join(__dirname, 'database.sqlite');
-const db = new sqlite3.Database(dbPath);
+let db = new sqlite3.Database(dbPath);
 
 // Middleware
 app.use(bodyParser.json());
@@ -765,17 +765,37 @@ app.get('/deliveries/new', (req, res) => {
 });
 
 app.post('/deliveries', (req, res) => {
-    const { delivery_number, delivery_date, supplier } = req.body;
+    const { delivery_date, supplier } = req.body;
     
-    db.run(`
-        INSERT INTO deliveries (delivery_number, delivery_date, supplier, updated_at) 
-        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-    `, [delivery_number, delivery_date, supplier], function(err) {
+    // Generate next delivery number in WS format
+    db.get(`SELECT delivery_number FROM deliveries ORDER BY id DESC LIMIT 1`, (err, lastDelivery) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ error: err.message });
         }
-        res.redirect(`/deliveries/${this.lastID}`);
+        
+        let nextNumber = 1;
+        if (lastDelivery && lastDelivery.delivery_number) {
+            // Extract number from WS0001 format
+            const match = lastDelivery.delivery_number.match(/WS(\d+)/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+        
+        // Format as WS0001, WS0002, etc.
+        const delivery_number = `WS${nextNumber.toString().padStart(4, '0')}`;
+        
+        db.run(`
+            INSERT INTO deliveries (delivery_number, delivery_date, supplier, updated_at) 
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        `, [delivery_number, delivery_date, supplier], function(err) {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: err.message });
+            }
+            res.redirect(`/deliveries/${this.lastID}`);
+        });
     });
 });
 
@@ -815,7 +835,7 @@ app.get('/deliveries/:id', (req, res) => {
                     } else {
                         db.all(`
                             SELECT di.id, di.imei, di.serial_number, di.original_imei, di.original_serial_number, 
-                                   di.status, di.created_at, d.delivery_number,
+                                   di.status, di.purchase_price, di.created_at, d.delivery_number,
                                    current_pv.name as current_product_version_name,
                                    original_pv.name as original_product_version_name,
                                    CASE 
@@ -993,26 +1013,54 @@ app.post('/admin/reset-database', (req, res) => {
     
     console.log('Admin database reset requested...');
     
-    // Execute the reset script
-    exec('npm run reset-db', { cwd: __dirname }, (error, stdout, stderr) => {
-        if (error) {
-            console.error('Database reset failed:', error);
+    // Close the current database connection to release the lock
+    db.close((closeErr) => {
+        if (closeErr) {
+            console.error('Error closing database for reset:', closeErr);
             return res.status(500).json({ 
                 success: false, 
-                error: 'Database reset failed: ' + error.message 
+                error: 'Failed to close database connection: ' + closeErr.message 
             });
         }
         
-        if (stderr) {
-            console.warn('Database reset warnings:', stderr);
-        }
+        console.log('Database connection closed for reset');
         
-        console.log('Database reset completed successfully');
-        console.log(stdout);
-        
-        res.json({ 
-            success: true, 
-            message: 'Database has been successfully reset to initial mobile retail data.' 
+        // Execute the reset script
+        exec('npm run reset-db', { cwd: __dirname }, (error, stdout, stderr) => {
+            // Reconnect to the database regardless of reset success/failure
+            const reconnectDb = () => {
+                db = new sqlite3.Database(dbPath, (reconnectErr) => {
+                    if (reconnectErr) {
+                        console.error('Failed to reconnect to database:', reconnectErr);
+                    } else {
+                        console.log('Database reconnected successfully');
+                    }
+                });
+            };
+            
+            if (error) {
+                console.error('Database reset failed:', error);
+                reconnectDb();
+                return res.status(500).json({ 
+                    success: false, 
+                    error: 'Database reset failed: ' + error.message 
+                });
+            }
+            
+            if (stderr) {
+                console.warn('Database reset warnings:', stderr);
+            }
+            
+            console.log('Database reset completed successfully');
+            console.log(stdout);
+            
+            // Reconnect to the fresh database
+            reconnectDb();
+            
+            res.json({ 
+                success: true, 
+                message: 'Database has been successfully reset to initial mobile retail data.' 
+            });
         });
     });
 });

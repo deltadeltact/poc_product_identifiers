@@ -1,19 +1,19 @@
 <%- include('partials/header', { title: 'Levering ' + delivery.delivery_number }) %>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>
-        <i class="fas fa-truck me-2"></i>
-        Levering <%= delivery.delivery_number %>
+<!-- Page Header -->
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-2xl font-bold text-gray-900 tracking-tight uppercase">
+        LEVERING <%= delivery.delivery_number %>
     </h1>
-    <div>
-        <a href="/deliveries" class="btn btn-secondary me-2">
-            <i class="fas fa-arrow-left me-1"></i>
+    <div class="flex items-center gap-3">
+        <button onclick="window.location.href='/deliveries'" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>
             Terug naar overzicht
-        </a>
+        </button>
         <% if (delivery.status === 'concept') { %>
             <form method="POST" action="/deliveries/<%= delivery.id %>/book" style="display: inline;">
-                <button type="submit" class="btn btn-success" onclick="return confirm('Weet je zeker dat je deze levering wilt boeken? Dit kan niet ongedaan worden gemaakt.')">
-                    <i class="fas fa-check me-1"></i>
+                <button type="submit" onclick="return confirm('Weet je zeker dat je deze levering wilt boeken? Dit kan niet ongedaan worden gemaakt.')" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    <i class="fas fa-check mr-2"></i>
                     Boek levering
                 </button>
             </form>
@@ -22,89 +22,79 @@
 </div>
 
 <!-- Delivery Info -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Levering informatie
-                </h5>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Delivery Information -->
+    <div class="bg-white rounded-lg border border-gray-200 p-6">
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-info-circle mr-2 text-blue-600"></i>
+                Levering informatie
+            </h2>
+        </div>
+        <div class="space-y-3">
+            <div class="flex justify-between">
+                <span class="text-sm font-medium text-gray-500">Leveringsnummer:</span>
+                <span class="text-sm text-gray-900 font-medium"><%= delivery.delivery_number %></span>
             </div>
-            <div class="card-body">
-                <table class="table table-borderless">
-                    <tr>
-                        <th>Leveringsnummer:</th>
-                        <td><%= delivery.delivery_number %></td>
-                    </tr>
-                    <tr>
-                        <th>Leveringsdatum:</th>
-                        <td><%= new Date(delivery.delivery_date).toLocaleDateString('nl-NL') %></td>
-                    </tr>
-                    <tr>
-                        <th>Leverancier:</th>
-                        <td><%= delivery.supplier || 'Niet opgegeven' %></td>
-                    </tr>
-                    <tr>
-                        <th>Status:</th>
-                        <td>
-                            <% 
-                                let statusClass = '';
-                                let statusText = '';
-                                switch(delivery.status) {
-                                    case 'concept':
-                                        statusClass = 'bg-secondary';
-                                        statusText = 'Concept';
-                                        break;
-                                    case 'booked':
-                                        statusClass = 'bg-success';
-                                        statusText = 'Geboekt';
-                                        break;
-                                    case 'partially_booked':
-                                        statusClass = 'bg-warning';
-                                        statusText = 'Gedeeltelijk geboekt';
-                                        break;
-                                }
-                            %>
-                            <span class="badge <%= statusClass %> fs-6">
-                                <%= statusText %>
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Aangemaakt:</th>
-                        <td><%= new Date(delivery.created_at).toLocaleString('nl-NL') %></td>
-                    </tr>
-                </table>
+            <div class="flex justify-between">
+                <span class="text-sm font-medium text-gray-500">Leveringsdatum:</span>
+                <span class="text-sm text-gray-900"><%= new Date(delivery.delivery_date).toLocaleDateString('nl-NL') %></span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-sm font-medium text-gray-500">Leverancier:</span>
+                <span class="text-sm text-gray-900"><%= delivery.supplier || 'Niet opgegeven' %></span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-sm font-medium text-gray-500">Status:</span>
+                <div>
+                    <% 
+                        let statusClass = '';
+                        let statusText = '';
+                        switch(delivery.status) {
+                            case 'concept':
+                                statusClass = 'bg-gray-100 text-gray-700';
+                                statusText = 'Concept';
+                                break;
+                            case 'booked':
+                                statusClass = 'bg-green-100 text-green-700';
+                                statusText = 'Geboekt';
+                                break;
+                            case 'partially_booked':
+                                statusClass = 'bg-amber-100 text-amber-700';
+                                statusText = 'Gedeeltelijk geboekt';
+                                break;
+                        }
+                    %>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= statusClass %>">
+                        <%= statusText %>
+                    </span>
+                </div>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-sm font-medium text-gray-500">Aangemaakt:</span>
+                <span class="text-sm text-gray-900"><%= new Date(delivery.created_at).toLocaleString('nl-NL') %></span>
             </div>
         </div>
     </div>
     
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    Statistieken
-                </h5>
+    <!-- Statistics -->
+    <div class="bg-white rounded-lg border border-gray-200 p-6">
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-chart-bar mr-2 text-green-600"></i>
+                Statistieken
+            </h2>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600 mb-1"><%= lines.length %></div>
+                <div class="text-sm text-gray-500">Productregels</div>
             </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-6">
-                        <div class="border rounded p-3">
-                            <h3 class="text-primary mb-1"><%= lines.length %></h3>
-                            <small class="text-muted">Productregels</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="border rounded p-3">
-                            <h3 class="text-success mb-1">
-                                <%= lines.reduce((sum, line) => sum + line.quantity, 0) %>
-                            </h3>
-                            <small class="text-muted">Totaal stuks</small>
-                        </div>
-                    </div>
+            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-bold text-green-600 mb-1">
+                    <%= lines.reduce((sum, line) => sum + line.quantity, 0) %>
                 </div>
+                <div class="text-sm text-gray-500">Totaal stuks</div>
             </div>
         </div>
     </div>
@@ -112,14 +102,14 @@
 
 <!-- Add New Product Line -->
 <% if (delivery.status === 'concept') { %>
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            <i class="fas fa-plus me-2"></i>
+<div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+    <div class="mb-4">
+        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+            <i class="fas fa-plus mr-2 text-green-600"></i>
             Productregel toevoegen
-        </h5>
+        </h2>
     </div>
-    <div class="card-body">
+    <div>
         <form method="POST" action="/deliveries/<%= delivery.id %>/lines" id="addLineForm">
             <div class="row g-3">
                 <div class="col-md-4">
@@ -188,41 +178,40 @@
 <% } %>
 
 <!-- Existing Product Lines -->
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            <i class="fas fa-list me-2"></i>
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+            <i class="fas fa-list mr-2 text-blue-600"></i>
             Productregels (<%= lines.length %>)
-        </h5>
+        </h2>
     </div>
-    <div class="card-body">
+    <div>
         <% if (lines.length === 0) { %>
-            <div class="text-center py-5">
-                <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Geen productregels</h5>
-                <p class="text-muted">Voeg productregels toe aan deze levering.</p>
+            <div class="text-center py-12">
+                <i class="fas fa-boxes text-4xl text-gray-300 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Geen productregels</h3>
+                <p class="text-gray-500">Voeg productregels toe aan deze levering.</p>
             </div>
         <% } else { %>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Productversie</th>
-                            <th>Trackingmodus</th>
-                            <th>Aantal</th>
-                            <th>Inkoopprijs</th>
-                            <th>Totaal</th>
-                            <th>Toegevoegd</th>
-                            <% if (delivery.status === 'concept') { %>
-                                <th>Acties</th>
-                            <% } %>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <table class="table-minimal w-full">
+                <thead>
+                    <tr>
+                        <th class="text-left">Productversie</th>
+                        <th class="text-left">Tracking Mode</th>
+                        <th class="text-left">Aantal</th>
+                        <th class="text-left">Inkoopprijs</th>
+                        <th class="text-left">Totaal</th>
+                        <th class="text-left">Toegevoegd</th>
+                        <% if (delivery.status === 'concept') { %>
+                            <th class="text-left">Acties</th>
+                        <% } %>
+                    </tr>
+                </thead>
+                <tbody>
                         <% lines.forEach(line => { %>
-                            <tr>
+                            <tr class="group">
                                 <td>
-                                    <a href="/product-versions/<%= line.product_version_id %>" class="text-decoration-none">
+                                    <a href="/product-versions/<%= line.product_version_id %>" class="text-blue-600 hover:text-blue-800 underline font-medium">
                                         <%= line.product_version_name %>
                                     </a>
                                 </td>
@@ -232,161 +221,212 @@
                                         let trackingText = '';
                                         switch(line.tracking_mode) {
                                             case 'none': 
-                                                badgeClass = 'bg-secondary';
+                                                badgeClass = 'bg-gray-100 text-gray-700';
                                                 trackingText = 'Geen tracking';
                                                 break;
                                             case 'imei':
-                                                badgeClass = 'bg-info';
+                                                badgeClass = 'bg-blue-100 text-blue-700';
                                                 trackingText = 'IMEI';
                                                 break;
                                             case 'serial':
-                                                badgeClass = 'bg-warning';
+                                                badgeClass = 'bg-amber-100 text-amber-700';
                                                 trackingText = 'Serienummer';
                                                 break;
                                         }
                                     %>
-                                    <span class="badge <%= badgeClass %>">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= badgeClass %>">
                                         <%= trackingText %>
                                     </span>
                                 </td>
-                                <td>
-                                    <span class="badge bg-primary fs-6">
-                                        <%= line.quantity %> stuks
-                                    </span>
+                                <td class="font-medium text-gray-900">
+                                    <%= line.quantity %> stuks
                                 </td>
                                 <td>
                                     <% if (line.purchase_price_per_unit) { %>
-                                        <span class="badge bg-success">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                                             €<%= parseFloat(line.purchase_price_per_unit).toFixed(2) %>
                                         </span>
                                     <% } else { %>
-                                        <span class="text-muted">Geen prijs</span>
+                                        <span class="text-gray-400">Geen prijs</span>
                                     <% } %>
                                 </td>
-                                <td>
+                                <td class="font-medium text-gray-900">
                                     <% if (line.purchase_price_per_unit) { %>
-                                        <strong>€<%= (parseFloat(line.purchase_price_per_unit) * line.quantity).toFixed(2) %></strong>
+                                        €<%= (parseFloat(line.purchase_price_per_unit) * line.quantity).toFixed(2) %>
                                     <% } else { %>
-                                        <span class="text-muted">-</span>
+                                        <span class="text-gray-400">-</span>
                                     <% } %>
                                 </td>
-                                <td><%= new Date(line.created_at).toLocaleDateString('nl-NL') %></td>
+                                <td class="text-sm text-gray-500"><%= new Date(line.created_at).toLocaleDateString('nl-NL') %></td>
                                 <% if (delivery.status === 'concept') { %>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash"></i> Verwijderen
+                                        <button class="text-red-600 hover:text-red-800 text-sm font-medium">
+                                            Verwijderen
                                         </button>
                                     </td>
                                 <% } %>
                             </tr>
-                            <!-- Show identifiers for this line if they exist -->
-                            <% if (line.identifiers && line.identifiers.length > 0) { %>
-                                <tr>
-                                    <td colspan="<%= delivery.status === 'concept' ? 5 : 4 %>" class="p-0">
-                                        <div class="bg-light p-3 ms-4">
-                                            <h6 class="mb-2">
-                                                <i class="fas fa-barcode me-2"></i>
-                                                Geregistreerde identifiers (<%= line.identifiers.length %>) - Levering <%= delivery.delivery_number %>:
-                                            </h6>
-                                            <div class="row">
-                                                <% line.identifiers.forEach(identifier => { %>
-                                                    <div class="col-md-6 mb-2">
-                                                        <div class="card">
-                                                            <div class="card-body p-2">
-                                                                <div class="d-flex justify-content-between align-items-center">
-                                                                    <div>
-                                                                        <% if (identifier.original_imei) { %>
-                                                                            <small class="text-muted">IMEI:</small>
-                                                                            <code class="text-primary"><%= identifier.original_imei %></code>
-                                                                            <% if (identifier.is_identifier_swapped && identifier.imei !== identifier.original_imei) { %>
-                                                                                <i class="fas fa-exclamation-triangle text-warning ms-1" 
-                                                                                   title="Deze IMEI is gewijzigd naar: <%= identifier.imei %>" 
-                                                                                   data-bs-toggle="tooltip"></i>
-                                                                            <% } %>
-                                                                            <% if (identifier.is_product_version_swapped) { %>
-                                                                                <i class="fas fa-arrow-right text-danger ms-1" 
-                                                                                   title="Productversie gewijzigd na levering naar: <%= identifier.current_product_version_name %>" 
-                                                                                   data-bs-toggle="tooltip"></i>
-                                                                            <% } %>
-                                                                            <br>
-                                                                        <% } %>
-                                                                        <% if (identifier.original_serial_number) { %>
-                                                                            <small class="text-muted">Serienummer:</small>
-                                                                            <code class="text-success"><%= identifier.original_serial_number %></code>
-                                                                            <% if (identifier.is_identifier_swapped && identifier.serial_number !== identifier.original_serial_number) { %>
-                                                                                <i class="fas fa-exclamation-triangle text-warning ms-1" 
-                                                                                   title="Dit serienummer is gewijzigd naar: <%= identifier.serial_number %>" 
-                                                                                   data-bs-toggle="tooltip"></i>
-                                                                            <% } %>
-                                                                            <% if (identifier.is_product_version_swapped) { %>
-                                                                                <i class="fas fa-arrow-right text-danger ms-1" 
-                                                                                   title="Productversie gewijzigd na levering naar: <%= identifier.current_product_version_name %>" 
-                                                                                   data-bs-toggle="tooltip"></i>
-                                                                            <% } %>
-                                                                        <% } %>
-                                                                    </div>
-                                                                    <div class="text-end">
-                                                                        <% 
-                                                                            let statusBadgeClass = '';
-                                                                            let statusText = '';
-                                                                            switch(identifier.status) {
-                                                                                case 'in_stock':
-                                                                                    statusBadgeClass = 'bg-success';
-                                                                                    statusText = 'Op voorraad';
-                                                                                    break;
-                                                                                case 'sold':
-                                                                                    statusBadgeClass = 'bg-primary';
-                                                                                    statusText = 'Verkocht';
-                                                                                    break;
-                                                                                case 'defective':
-                                                                                    statusBadgeClass = 'bg-danger';
-                                                                                    statusText = 'Defect';
-                                                                                    break;
-                                                                                case 'missing':
-                                                                                    statusBadgeClass = 'bg-warning';
-                                                                                    statusText = 'Vermist';
-                                                                                    break;
-                                                                                case 'reserved':
-                                                                                    statusBadgeClass = 'bg-info';
-                                                                                    statusText = 'Gereserveerd';
-                                                                                    break;
-                                                                            }
-                                                                        %>
-                                                                        <span class="badge <%= statusBadgeClass %>">
-                                                                            <%= statusText %>
-                                                                        </span><br>
-                                                                        <a href="/identifiers/<%= identifier.id %>" class="btn btn-outline-primary btn-sm mt-1">
-                                                                            <i class="fas fa-eye"></i> Bekijk
-                                                                        </a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                <% }); %>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <% } else if (line.tracking_mode !== 'none') { %>
-                                <tr>
-                                    <td colspan="<%= delivery.status === 'concept' ? 5 : 4 %>" class="p-0">
-                                        <div class="bg-light p-3 ms-4 text-muted">
-                                            <small>
-                                                <i class="fas fa-info-circle me-2"></i>
-                                                Geen identifiers gevonden voor deze productversie in deze levering.
-                                            </small>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <% } %>
-                        <% }); %>
-                    </tbody>
-                </table>
-            </div>
+                    <% }); %>
+                </tbody>
+            </table>
         <% } %>
     </div>
 </div>
+
+<!-- Identifiers by Product Version -->
+<% 
+let hasIdentifiers = lines.some(line => line.identifiers && line.identifiers.length > 0);
+%>
+
+<% if (hasIdentifiers) { %>
+<div class="space-y-6">
+    <% lines.forEach(line => { %>
+        <% if (line.identifiers && line.identifiers.length > 0) { %>
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-barcode mr-2 text-purple-600"></i>
+                        <%= line.product_version_name %>
+                        <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                            <%= line.identifiers.length %> identifiers
+                        </span>
+                    </h3>
+                    <div class="text-sm text-gray-500">
+                        <% 
+                            let trackingBadgeClass = '';
+                            let trackingText = '';
+                            switch(line.tracking_mode) {
+                                case 'imei':
+                                    trackingBadgeClass = 'bg-blue-100 text-blue-700';
+                                    trackingText = 'IMEI tracking';
+                                    break;
+                                case 'serial':
+                                    trackingBadgeClass = 'bg-amber-100 text-amber-700';
+                                    trackingText = 'Serial tracking';
+                                    break;
+                            }
+                        %>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= trackingBadgeClass %>">
+                            <%= trackingText %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <table class="table-minimal w-full">
+                <thead>
+                    <tr>
+                        <th class="w-8">
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </th>
+                        <th class="text-left">ID</th>
+                        <% if (line.tracking_mode === 'imei') { %>
+                            <th class="text-left">IMEI</th>
+                        <% } %>
+                        <% if (line.tracking_mode === 'serial') { %>
+                            <th class="text-left">Serienummer</th>
+                        <% } %>
+                        <th class="text-left">Status</th>
+                        <th class="text-left">Inkoopprijs</th>
+                        <th class="text-left">Wijzigingen</th>
+                        <th class="text-left">Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% line.identifiers.forEach(identifier => { %>
+                        <tr class="group">
+                            <td>
+                                <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            </td>
+                            <td class="font-medium text-gray-900"><%= identifier.id %></td>
+                            <% if (line.tracking_mode === 'imei') { %>
+                                <td>
+                                    <% if (identifier.original_imei) { %>
+                                        <code class="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800"><%= identifier.original_imei %></code>
+                                    <% } else { %>
+                                        <span class="text-gray-400">-</span>
+                                    <% } %>
+                                </td>
+                            <% } %>
+                            <% if (line.tracking_mode === 'serial') { %>
+                                <td>
+                                    <% if (identifier.original_serial_number) { %>
+                                        <code class="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800"><%= identifier.original_serial_number %></code>
+                                    <% } else { %>
+                                        <span class="text-gray-400">-</span>
+                                    <% } %>
+                                </td>
+                            <% } %>
+                            <td>
+                                <% 
+                                    let statusBadgeClass = '';
+                                    let statusText = '';
+                                    switch(identifier.status) {
+                                        case 'in_stock':
+                                            statusBadgeClass = 'bg-green-100 text-green-700';
+                                            statusText = 'Op voorraad';
+                                            break;
+                                        case 'sold':
+                                            statusBadgeClass = 'bg-blue-100 text-blue-700';
+                                            statusText = 'Verkocht';
+                                            break;
+                                        case 'defective':
+                                            statusBadgeClass = 'bg-red-100 text-red-700';
+                                            statusText = 'Defect';
+                                            break;
+                                        case 'missing':
+                                            statusBadgeClass = 'bg-amber-100 text-amber-700';
+                                            statusText = 'Vermist';
+                                            break;
+                                        case 'reserved':
+                                            statusBadgeClass = 'bg-purple-100 text-purple-700';
+                                            statusText = 'Gereserveerd';
+                                            break;
+                                    }
+                                %>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= statusBadgeClass %>">
+                                    <%= statusText %>
+                                </span>
+                            </td>
+                            <td>
+                                <% if (identifier.purchase_price) { %>
+                                    <span class="font-medium text-gray-900">€<%= parseFloat(identifier.purchase_price).toFixed(2) %></span>
+                                <% } else { %>
+                                    <span class="text-gray-400">-</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-1">
+                                    <% if (identifier.is_identifier_swapped) { %>
+                                        <span class="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700" title="Identifier gewijzigd na levering">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </span>
+                                    <% } %>
+                                    <% if (identifier.is_product_version_swapped) { %>
+                                        <span class="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700" title="Productversie gewijzigd na levering">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </span>
+                                    <% } %>
+                                    <% if (!identifier.is_identifier_swapped && !identifier.is_product_version_swapped) { %>
+                                        <span class="text-gray-400">-</span>
+                                    <% } %>
+                                </div>
+                            </td>
+                            <td>
+                                <button onclick="window.location.href='/identifiers/<%= identifier.id %>'" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    Bekijken
+                                </button>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+        <% } %>
+    <% }); %>
+</div>
+<% } %>
 
 <script>
 // Handle product version selection for tracking mode display

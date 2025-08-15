@@ -1,26 +1,31 @@
 <%- include('partials/header', { title: 'Koopjeskelder' }) %>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>
-        <i class="fas fa-tags me-2"></i>
-        Koopjeskelder
+<!-- Page Header -->
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-2xl font-bold text-gray-900 tracking-tight uppercase">
+        KOOPJESKELDER
     </h1>
-    <div>
-        <span class="badge bg-warning fs-6">
-            <i class="fas fa-tag me-1"></i>
+    <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-700">
+            <i class="fas fa-tag mr-2"></i>
             <%= clearanceItems.length %> items
         </span>
     </div>
 </div>
 
-<!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" action="/clearance">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label for="product_version" class="form-label">Productversie</label>
-                    <select class="form-select" id="product_version" name="product_version">
+<!-- Search and Filter Bar -->
+<div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+    <form method="GET" action="/clearance">
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div class="flex flex-1 gap-4 w-full sm:w-auto">
+                <div class="relative flex-1 max-w-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" placeholder="Zoek koopjes..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <select id="product_version" name="product_version" class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                         <option value="">Alle productversies</option>
                         <% productVersions.forEach(pv => { %>
                             <option value="<%= pv.id %>" <%= filters.product_version == pv.id ? 'selected' : '' %>>
@@ -28,33 +33,29 @@
                             </option>
                         <% }); %>
                     </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="sort_by" class="form-label">Sorteren op</label>
-                    <select class="form-select" id="sort_by" name="sort_by">
+                    <select id="sort_by" name="sort_by" class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                         <option value="created_at" <%= filters.sort_by === 'created_at' ? 'selected' : '' %>>Datum toegevoegd</option>
                         <option value="clearance_price" <%= filters.sort_by === 'clearance_price' ? 'selected' : '' %>>Koopjesprijs</option>
                         <option value="product_version_name" <%= filters.sort_by === 'product_version_name' ? 'selected' : '' %>>Productversie</option>
                     </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="sort_order" class="form-label">Volgorde</label>
-                    <select class="form-select" id="sort_order" name="sort_order">
+                    <select id="sort_order" name="sort_order" class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                         <option value="DESC" <%= filters.sort_order === 'DESC' ? 'selected' : '' %>>Aflopend</option>
                         <option value="ASC" <%= filters.sort_order === 'ASC' ? 'selected' : '' %>>Oplopend</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-filter"></i> Filter
-                        </button>
-                    </div>
-                </div>
             </div>
-        </form>
-    </div>
+            <div class="flex gap-2">
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    <i class="fas fa-filter mr-2"></i>
+                    Filter
+                </button>
+                <button type="button" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-download mr-2"></i>
+                    Exporteren
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 
 <!-- Summary Statistics -->
@@ -100,106 +101,111 @@
     </div>
 <% } %>
 
-<!-- Clearance Items Table -->
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            Koopjeskelder Items
-        </h5>
-    </div>
-    <div class="card-body">
-        <% if (clearanceItems.length === 0) { %>
-            <div class="text-center py-5">
-                <i class="fas fa-tags fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Geen koopjes gevonden</h5>
-                <p class="text-muted">Er zijn momenteel geen items gemarkeerd als koopje.</p>
-                <a href="/identifiers" class="btn btn-primary">
-                    <i class="fas fa-search me-2"></i>
-                    Zoek identifiers
-                </a>
+<!-- Main Content -->
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <% if (clearanceItems.length === 0) { %>
+        <div class="text-center py-12">
+            <i class="fas fa-tags text-4xl text-gray-300 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Geen koopjes gevonden</h3>
+            <p class="text-gray-500 mb-6">Er zijn momenteel geen items gemarkeerd als koopje.</p>
+            <button onclick="window.location.href='/identifiers'" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-search mr-2"></i>
+                Zoek identifiers
+            </button>
+        </div>
+    <% } else { %>
+        <table class="table-minimal w-full">
+            <thead>
+                <tr>
+                    <th class="w-8">
+                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    </th>
+                    <th class="text-left">
+                        <div class="flex items-center gap-1">
+                            ID
+                            <i class="fas fa-sort-up text-xs text-gray-400"></i>
+                        </div>
+                    </th>
+                    <th class="text-left">IMEI / Serienummer</th>
+                    <th class="text-left">Productversie</th>
+                    <th class="text-left">Koopjesprijs</th>
+                    <th class="text-left">Reden</th>
+                    <th class="text-left">Datum</th>
+                    <th class="text-left">Acties</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% clearanceItems.forEach(item => { %>
+                    <tr class="group">
+                        <td>
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </td>
+                        <td class="font-medium text-gray-900"><%= item.id %></td>
+                        <td>
+                            <% if (item.imei) { %>
+                                <code class="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800"><%= item.imei %></code>
+                            <% } else if (item.serial_number) { %>
+                                <code class="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800"><%= item.serial_number %></code>
+                            <% } else { %>
+                                <span class="text-gray-400">-</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <a href="/product-versions/<%= item.product_version_id %>" class="text-blue-600 hover:text-blue-800 underline font-medium">
+                                <%= item.product_version_name %>
+                            </a>
+                        </td>
+                        <td>
+                            <% if (item.clearance_price) { %>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                    €<%= parseFloat(item.clearance_price).toFixed(2) %>
+                                </span>
+                            <% } else { %>
+                                <span class="text-gray-400">Geen prijs</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <% if (item.clearance_reason) { %>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                    <%= item.clearance_reason %>
+                                </span>
+                            <% } else { %>
+                                <span class="text-gray-400">Geen reden</span>
+                            <% } %>
+                        </td>
+                        <td class="text-sm text-gray-500">
+                            <%= new Date(item.updated_at).toLocaleDateString('nl-NL') %>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <button onclick="window.location.href='/identifiers/<%= item.id %>'" class="text-blue-600 hover:text-blue-800 text-sm font-medium" title="Bekijken">
+                                    Bekijken
+                                </button>
+                                <button type="button" onclick="editClearance(<%= item.id %>, '<%= item.clearance_price || '' %>', '<%= item.clearance_reason || '' %>')" data-bs-toggle="modal" data-bs-target="#editClearanceModal" class="text-amber-600 hover:text-amber-800 text-sm font-medium" title="Bewerken">
+                                    Bewerken
+                                </button>
+                                <button type="button" onclick="removeClearance(<%= item.id %>)" class="text-red-600 hover:text-red-800 text-sm font-medium" title="Verwijderen">
+                                    Verwijderen
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div class="text-sm text-gray-500">
+                <%= clearanceItems.length %> resultaten
             </div>
-        <% } else { %>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>IMEI / Serienummer</th>
-                            <th>Productversie</th>
-                            <th>Koopjesprijs</th>
-                            <th>Reden</th>
-                            <th>Datum Gemarkeerd</th>
-                            <th>Acties</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% clearanceItems.forEach(item => { %>
-                            <tr>
-                                <td>
-                                    <a href="/identifiers/<%= item.id %>" class="text-decoration-none">
-                                        #<%= item.id %>
-                                    </a>
-                                </td>
-                                <td>
-                                    <% if (item.imei) { %>
-                                        <code><%= item.imei %></code>
-                                    <% } else if (item.serial_number) { %>
-                                        <code><%= item.serial_number %></code>
-                                    <% } else { %>
-                                        <span class="text-muted">-</span>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <a href="/product-versions/<%= item.product_version_id %>" class="text-decoration-none">
-                                        <%= item.product_version_name %>
-                                    </a>
-                                </td>
-                                <td>
-                                    <% if (item.clearance_price) { %>
-                                        <span class="badge bg-success">
-                                            €<%= parseFloat(item.clearance_price).toFixed(2) %>
-                                        </span>
-                                    <% } else { %>
-                                        <span class="text-muted">Geen prijs</span>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <% if (item.clearance_reason) { %>
-                                        <span class="badge bg-info">
-                                            <%= item.clearance_reason %>
-                                        </span>
-                                    <% } else { %>
-                                        <span class="text-muted">Geen reden</span>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <small class="text-muted">
-                                        <%= new Date(item.updated_at).toLocaleDateString('nl-NL') %>
-                                    </small>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="/identifiers/<%= item.id %>" class="btn btn-sm btn-outline-primary" title="Bekijken">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-warning" 
-                                                onclick="editClearance(<%= item.id %>, '<%= item.clearance_price || '' %>', '<%= item.clearance_reason || '' %>')"
-                                                data-bs-toggle="modal" data-bs-target="#editClearanceModal" title="Bewerken">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                onclick="removeClearance(<%= item.id %>)" title="Koopje status verwijderen">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
+            <div class="flex items-center space-x-2">
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">Vorige</button>
+                <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded">1</button>
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">Volgende</button>
             </div>
-        <% } %>
-    </div>
+        </div>
+    <% } %>
 </div>
 
 <!-- Edit Clearance Modal -->

@@ -1,114 +1,155 @@
 <%- include('partials/header', { title: 'Productversies' }) %>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>
-        <i class="fas fa-boxes me-2"></i>
-        Productversies
+<!-- Page Header -->
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-2xl font-bold text-gray-900 tracking-tight uppercase">
+        PRODUCTVERSIES
     </h1>
-    <a href="/product-versions/new" class="btn btn-primary">
-        <i class="fas fa-plus me-2"></i>
-        Nieuwe productversie
-    </a>
+    <button onclick="window.location.href='/product-versions/new'" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
+        <i class="fas fa-plus mr-2"></i>
+        Product aanmaken
+    </button>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <% if (productVersions.length === 0) { %>
-            <div class="text-center py-5">
-                <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Geen productversies gevonden</h5>
-                <p class="text-muted">Maak je eerste productversie aan om te beginnen.</p>
-                <a href="/product-versions/new" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>
-                    Nieuwe productversie
-                </a>
+<!-- Search and Filter Bar -->
+<div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div class="flex flex-1 gap-4 w-full sm:w-auto">
+            <div class="relative flex-1 max-w-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" placeholder="Zoek op naam..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
-        <% } else { %>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Productversie</th>
-                            <th>EAN</th>
-                            <th>Trackingconfiguratie</th>
-                            <th>Voorraad</th>
-                            <th>Koopjes</th>
-                            <th>Totaal Identifiers</th>
-                            <th>Acties</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% productVersions.forEach(pv => { %>
-                            <tr>
-                                <td>
-                                    <a href="/product-versions/<%= pv.id %>" class="text-decoration-none">
-                                        <strong><%= pv.name %></strong>
-                                    </a>
-                                </td>
-                                <td><%= pv.ean || '-' %></td>
-                                <td>
-                                    <% 
-                                        let badgeClass = '';
-                                        let trackingText = '';
-                                        switch(pv.tracking_mode) {
-                                            case 'none': 
-                                                badgeClass = 'bg-secondary';
-                                                trackingText = 'Geen tracking';
-                                                break;
-                                            case 'imei':
-                                                badgeClass = 'bg-info';
-                                                trackingText = 'IMEI';
-                                                break;
-                                            case 'serial':
-                                                badgeClass = 'bg-warning';
-                                                trackingText = 'Serienummer';
-                                                break;
-                                        }
-                                    %>
-                                    <span class="badge <%= badgeClass %>">
-                                        <%= trackingText %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <% if (pv.tracking_mode === 'none') { %>
-                                        <span class="text-muted">N.v.t.</span>
-                                    <% } else { %>
-                                        <span class="badge bg-success">
-                                            <%= pv.stock_count || 0 %>
-                                        </span>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <% if (pv.tracking_mode === 'none') { %>
-                                        <span class="text-muted">N.v.t.</span>
-                                    <% } else { %>
-                                        <% if ((pv.clearance_count || 0) > 0) { %>
-                                            <span class="badge bg-warning">
-                                                <i class="fas fa-tag me-1"></i>
-                                                <%= pv.clearance_count %>
-                                            </span>
-                                        <% } else { %>
-                                            <span class="text-muted">0</span>
-                                        <% } %>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary">
-                                        <%= pv.total_identifiers || 0 %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="/product-versions/<%= pv.id %>" class="btn btn-sm btn-outline-primary me-2">
-                                        <i class="fas fa-eye"></i> Bekijken
-                                    </a>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
+            <div class="relative">
+                <select class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="">Filter op tracking mode...</option>
+                    <option value="none">Geen tracking</option>
+                    <option value="imei">IMEI</option>
+                    <option value="serial">Serienummer</option>
+                </select>
             </div>
-        <% } %>
+        </div>
+        <div class="flex gap-2">
+            <button class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <i class="fas fa-filter mr-2"></i>
+                Filters
+            </button>
+            <button class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <i class="fas fa-download mr-2"></i>
+                Exporteren
+            </button>
+        </div>
     </div>
+</div>
+
+<!-- Main Content -->
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <% if (productVersions.length === 0) { %>
+        <div class="text-center py-12">
+            <i class="fas fa-boxes text-4xl text-gray-300 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Geen productversies gevonden</h3>
+            <p class="text-gray-500 mb-6">Maak je eerste productversie aan om te beginnen.</p>
+            <button onclick="window.location.href='/product-versions/new'" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-plus mr-2"></i>
+                Product aanmaken
+            </button>
+        </div>
+    <% } else { %>
+        <table class="table-minimal w-full">
+            <thead>
+                <tr>
+                    <th class="w-8">
+                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    </th>
+                    <th class="text-left">
+                        <div class="flex items-center gap-1">
+                            ID
+                            <i class="fas fa-sort-up text-xs text-gray-400"></i>
+                        </div>
+                    </th>
+                    <th class="text-left">Naam</th>
+                    <th class="text-left">EAN</th>
+                    <th class="text-left">Tracking Mode</th>
+                    <th class="text-left">Voorraad</th>
+                    <th class="text-left">Totaal Items</th>
+                    <th class="text-left">Acties</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% productVersions.forEach(pv => { %>
+                    <tr class="group">
+                        <td>
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </td>
+                        <td class="font-medium text-gray-900"><%= pv.id %></td>
+                        <td>
+                            <a href="/product-versions/<%= pv.id %>" class="text-blue-600 hover:text-blue-800 underline font-medium">
+                                <%= pv.name %>
+                            </a>
+                        </td>
+                        <td class="text-gray-600"><%= pv.ean || '-' %></td>
+                        <td>
+                            <% 
+                                let badgeClass = '';
+                                let trackingText = '';
+                                switch(pv.tracking_mode) {
+                                    case 'none': 
+                                        badgeClass = 'bg-gray-100 text-gray-700';
+                                        trackingText = 'Geen tracking';
+                                        break;
+                                    case 'imei':
+                                        badgeClass = 'bg-blue-100 text-blue-700';
+                                        trackingText = 'IMEI';
+                                        break;
+                                    case 'serial':
+                                        badgeClass = 'bg-amber-100 text-amber-700';
+                                        trackingText = 'Serienummer';
+                                        break;
+                                }
+                            %>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= badgeClass %>">
+                                <%= trackingText %>
+                            </span>
+                        </td>
+                        <td>
+                            <% if (pv.tracking_mode === 'none') { %>
+                                <span class="text-gray-400">N.v.t.</span>
+                            <% } else { %>
+                                <span class="font-medium text-gray-900">
+                                    <%= pv.stock_count || 0 %>
+                                </span>
+                            <% } %>
+                        </td>
+                        <td class="font-medium text-gray-900">
+                            <%= pv.total_identifiers || 0 %>
+                        </td>
+                        <td>
+                            <button onclick="window.location.href='/product-versions/<%= pv.id %>'" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Bekijken
+                            </button>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div class="text-sm text-gray-500">
+                <%= productVersions.length %> resultaten
+            </div>
+            <div class="flex items-center space-x-2">
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">Vorige</button>
+                <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded">1</button>
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">2</button>
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">3</button>
+                <span class="px-2 text-gray-400">...</span>
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">92</button>
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">Volgende</button>
+            </div>
+        </div>
+    <% } %>
 </div>
 
 <%- include('partials/footer') %>

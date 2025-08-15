@@ -12,15 +12,10 @@
             <div class="card-body">
                 <form method="POST" action="/deliveries">
                     <div class="mb-3">
-                        <label for="delivery_number" class="form-label">Leveringsnummer *</label>
-                        <input 
-                            type="text" 
-                            class="form-control" 
-                            id="delivery_number" 
-                            name="delivery_number" 
-                            required
-                            placeholder="Bijvoorbeeld: LEV-2025-001">
-                        <div class="form-text">Uniek leveringsnummer voor identificatie</div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Leveringsnummer:</strong> Wordt automatisch gegenereerd in het formaat WS0001, WS0002, etc.
+                        </div>
                     </div>
                     
                     <div class="mb-3">
@@ -42,7 +37,7 @@
                             class="form-control" 
                             id="supplier" 
                             name="supplier"
-                            placeholder="Bijvoorbeeld: Apple Distribution">
+                            placeholder="Bijvoorbeeld: Apple Distribution Europe">
                         <div class="form-text">Optioneel in POC</div>
                     </div>
                     

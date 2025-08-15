@@ -1,149 +1,199 @@
 <%- include('partials/header', { title: 'Dashboard' }) %>
 
-<div class="row">
-    <div class="col-12">
-        <h1 class="mb-4">
-            <i class="fas fa-tachometer-alt me-2"></i>
-            Identifier Tracking POC Dashboard
-        </h1>
+<!-- Page Header -->
+<div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900 tracking-tight uppercase mb-2">
+        DASHBOARD
+    </h1>
+    <p class="text-gray-600 text-lg">
+        Welkom bij de Proof of Concept voor product identifier tracking. 
+        Dit systeem houdt producten bij op IMEI/serienummer niveau.
+    </p>
+</div>
+
+<!-- Quick Action Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-medium text-gray-500">Productversies</h3>
+                <p class="text-xs text-gray-400 mt-1">Beheer trackingconfiguratie</p>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-lg">
+                <i class="fas fa-boxes text-blue-600 text-xl"></i>
+            </div>
+        </div>
+        <div class="mt-4">
+            <button onclick="window.location.href='/product-versions'" class="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center">
+                Bekijk <i class="fas fa-arrow-right ml-1 text-xs"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-medium text-gray-500">Identifiers</h3>
+                <p class="text-xs text-gray-400 mt-1">IMEI/Serienummers zoeken</p>
+            </div>
+            <div class="p-3 bg-green-50 rounded-lg">
+                <i class="fas fa-search text-green-600 text-xl"></i>
+            </div>
+        </div>
+        <div class="mt-4">
+            <button onclick="window.location.href='/identifiers'" class="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center">
+                Zoeken <i class="fas fa-arrow-right ml-1 text-xs"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-medium text-gray-500">Voorraad</h3>
+                <p class="text-xs text-gray-400 mt-1">Voorraad per productversie</p>
+            </div>
+            <div class="p-3 bg-purple-50 rounded-lg">
+                <i class="fas fa-warehouse text-purple-600 text-xl"></i>
+            </div>
+        </div>
+        <div class="mt-4">
+            <button onclick="window.location.href='/stock'" class="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center">
+                Inzien <i class="fas fa-arrow-right ml-1 text-xs"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-medium text-gray-500">Leveringen</h3>
+                <p class="text-xs text-gray-400 mt-1">Voorraad inboeken</p>
+            </div>
+            <div class="p-3 bg-amber-50 rounded-lg">
+                <i class="fas fa-truck text-amber-600 text-xl"></i>
+            </div>
+        </div>
+        <div class="mt-4">
+            <button onclick="window.location.href='/deliveries'" class="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center">
+                Beheren <i class="fas fa-arrow-right ml-1 text-xs"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Functionality Status -->
+<div class="bg-white rounded-lg border border-gray-200 p-6">
+    <div class="mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+            <i class="fas fa-info-circle mr-2 text-blue-600"></i>
+            Functionaliteit in deze POC
+        </h2>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+            <h3 class="text-sm font-medium text-gray-700 mb-4">Geïmplementeerd:</h3>
+            <ul class="space-y-2">
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Productversies beheren
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Trackingconfiguratie instellen
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Identifiers zoeken en bekijken
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Voorraad overzicht
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Statuswijzigingen
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Leveringen inboeken
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Inkoopprijzen tracking
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Koopjeskelder beheer
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Mobile retail scenario
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Bulk voorraad beheer
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Complete audit trails
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-check text-green-500 mr-3 flex-shrink-0"></i>
+                    Geavanceerd zoeken/filteren
+                </li>
+            </ul>
+        </div>
         
-        <p class="lead">
-            Welkom bij de Proof of Concept voor product identifier tracking. 
-            Dit systeem houdt producten bij op IMEI/serienummer niveau.
-        </p>
-    </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title">Productversies</h5>
-                        <p class="card-text">Beheer trackingconfiguratie</p>
-                    </div>
-                    <i class="fas fa-boxes fa-2x opacity-75"></i>
-                </div>
-                <a href="/product-versions" class="btn btn-outline-light btn-sm mt-2">
-                    Bekijk <i class="fas fa-arrow-right ms-1"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title">Identifiers</h5>
-                        <p class="card-text">IMEI/Serienummers zoeken</p>
-                    </div>
-                    <i class="fas fa-search fa-2x opacity-75"></i>
-                </div>
-                <a href="/identifiers" class="btn btn-outline-light btn-sm mt-2">
-                    Zoeken <i class="fas fa-arrow-right ms-1"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title">Voorraad</h5>
-                        <p class="card-text">Voorraad per productversie</p>
-                    </div>
-                    <i class="fas fa-warehouse fa-2x opacity-75"></i>
-                </div>
-                <a href="/stock" class="btn btn-outline-light btn-sm mt-2">
-                    Inzien <i class="fas fa-arrow-right ms-1"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title">Leveringen</h5>
-                        <p class="card-text">Voorraad inboeken</p>
-                    </div>
-                    <i class="fas fa-truck fa-2x opacity-75"></i>
-                </div>
-                <a href="/deliveries" class="btn btn-outline-light btn-sm mt-2">
-                    Beheren <i class="fas fa-arrow-right ms-1"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-5">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Functionaliteit in deze POC
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Geïmplementeerd:</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success me-2"></i> Productversies beheren</li>
-                            <li><i class="fas fa-check text-success me-2"></i> Trackingconfiguratie instellen</li>
-                            <li><i class="fas fa-check text-success me-2"></i> Identifiers zoeken en bekijken</li>
-                            <li><i class="fas fa-check text-success me-2"></i> Voorraad overzicht</li>
-                            <li><i class="fas fa-check text-success me-2"></i> Statuswijzigingen</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Nog te implementeren:</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success me-2"></i> Leveringen inboeken</li>
-                            <li><i class="fas fa-check text-success me-2"></i> Inkoopprijzen tracking</li>
-                            <li><i class="fas fa-check text-success me-2"></i> Koopjeskelder beheer</li>
-                            <li><i class="fas fa-check text-success me-2"></i> Mobile retail scenario</li>
-                            <li><i class="fas fa-clock text-warning me-2"></i> Identifier swaps</li>
-                            <li><i class="fas fa-clock text-warning me-2"></i> Productversie swaps</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+        <div>
+            <h3 class="text-sm font-medium text-gray-700 mb-4">In ontwikkeling:</h3>
+            <ul class="space-y-2 mb-6">
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-cog text-blue-500 mr-3 flex-shrink-0"></i>
+                    Identifier swaps (backend klaar)
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-cog text-blue-500 mr-3 flex-shrink-0"></i>
+                    Productversie swaps (backend klaar)
+                </li>
+            </ul>
+            
+            <h3 class="text-sm font-medium text-gray-700 mb-4">Toekomstige uitbreidingen:</h3>
+            <ul class="space-y-2">
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-clock text-amber-500 mr-3 flex-shrink-0"></i>
+                    Gebruikersauthenticatie
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-clock text-amber-500 mr-3 flex-shrink-0"></i>
+                    API endpoints
+                </li>
+                <li class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-clock text-amber-500 mr-3 flex-shrink-0"></i>
+                    Analytics dashboard
+                </li>
+            </ul>
         </div>
     </div>
 </div>
 
 <!-- Admin Section -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card border-warning">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-tools me-2"></i>
-                    Admin Tools
-                </h5>
-            </div>
-            <div class="card-body">
-                <p class="card-text mb-3">
-                    <strong>Database Reset:</strong> Reset de database naar de initiële mobile retail testdata. 
-                    Dit verwijdert alle huidige gegevens en laadt verse voorbeelddata.
-                </p>
-                <button type="button" class="btn btn-danger" onclick="resetDatabase()">
-                    <i class="fas fa-database me-2"></i>
-                    Reset Database
-                </button>
-            </div>
-        </div>
+<div class="bg-amber-50 border border-amber-200 rounded-lg p-6 mt-8">
+    <div class="mb-4">
+        <h2 class="text-lg font-semibold text-amber-800 flex items-center">
+            <i class="fas fa-tools mr-2"></i>
+            Admin Tools
+        </h2>
     </div>
+    <p class="text-amber-700 mb-4">
+        <strong>Database Reset:</strong> Reset de database naar de initiële mobile retail testdata. 
+        Dit verwijdert alle huidige gegevens en laadt verse voorbeelddata.
+    </p>
+    <button type="button" onclick="resetDatabase()" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors">
+        <i class="fas fa-database mr-2"></i>
+        Reset Database
+    </button>
 </div>
 
 <!-- Reset Confirmation Modal -->

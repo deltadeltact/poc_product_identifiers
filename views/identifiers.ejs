@@ -1,28 +1,31 @@
 <%- include('partials/header', { title: 'Identifiers' }) %>
 
-<h1>
-    <i class="fas fa-search me-2"></i>
-    Identifiers zoeken
-</h1>
+<!-- Page Header -->
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-2xl font-bold text-gray-900 tracking-tight uppercase">
+        IDENTIFIERS
+    </h1>
+</div>
 
-<!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" action="/identifiers">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label for="search" class="form-label">IMEI / Serienummer</label>
+<!-- Search and Filter Bar -->
+<div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+    <form method="GET" action="/identifiers">
+        <div class="flex flex-col gap-4">
+            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                <div class="relative flex-1 max-w-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
                     <input 
                         type="text" 
-                        class="form-control" 
                         id="search" 
                         name="search" 
                         value="<%= filters.search || '' %>"
-                        placeholder="Zoek op IMEI of serienummer">
+                        placeholder="Zoek op IMEI of serienummer..." 
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                <div class="col-md-3">
-                    <label for="product_version" class="form-label">Productversie</label>
-                    <select class="form-select" id="product_version" name="product_version">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
+                    <select id="product_version" name="product_version" class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                         <option value="">Alle productversies</option>
                         <% productVersions.forEach(pv => { %>
                             <option value="<%= pv.id %>" <%= filters.product_version == pv.id ? 'selected' : '' %>>
@@ -30,10 +33,7 @@
                             </option>
                         <% }); %>
                     </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status">
+                    <select id="status" name="status" class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                         <option value="">Alle statussen</option>
                         <option value="in_stock" <%= filters.status === 'in_stock' ? 'selected' : '' %>>Op voorraad</option>
                         <option value="sold" <%= filters.status === 'sold' ? 'selected' : '' %>>Verkocht</option>
@@ -41,139 +41,154 @@
                         <option value="missing" <%= filters.status === 'missing' ? 'selected' : '' %>>Vermist</option>
                         <option value="reserved" <%= filters.status === 'reserved' ? 'selected' : '' %>>Gereserveerd</option>
                     </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="clearance" class="form-label">Koopje</label>
-                    <select class="form-select" id="clearance" name="clearance">
+                    <select id="clearance" name="clearance" class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                         <option value="">Alle items</option>
                         <option value="true" <%= filters.clearance === 'true' ? 'selected' : '' %>>Alleen koopjes</option>
                         <option value="false" <%= filters.clearance === 'false' ? 'selected' : '' %>>Reguliere items</option>
                     </select>
                 </div>
-                <div class="col-md-1">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                        <i class="fas fa-search mr-2"></i>
+                        Zoeken
+                    </button>
+                    <button type="button" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-filter mr-2"></i>
+                        Filters
+                    </button>
+                    <button type="button" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-download mr-2"></i>
+                        Exporteren
+                    </button>
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
-<!-- Results -->
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            Gevonden identifiers (<%= identifiers.length %>)
-        </h5>
-    </div>
-    <div class="card-body">
-        <% if (identifiers.length === 0) { %>
-            <div class="text-center py-5">
-                <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Geen identifiers gevonden</h5>
-                <p class="text-muted">Pas je zoekfilters aan of boek nieuwe voorraad in.</p>
-            </div>
-        <% } else { %>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>IMEI</th>
-                            <th>Serienummer</th>
-                            <th>Productversie</th>
-                            <th>Status</th>
-                            <th>Koopje</th>
-                            <th>Acties</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% identifiers.forEach(identifier => { %>
-                            <tr>
-                                <td>
-                                    <a href="/identifiers/<%= identifier.id %>" class="text-decoration-none">
-                                        #<%= identifier.id %>
-                                    </a>
-                                </td>
-                                <td>
-                                    <% if (identifier.imei) { %>
-                                        <code><%= identifier.imei %></code>
-                                    <% } else { %>
-                                        <span class="text-muted">-</span>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <% if (identifier.serial_number) { %>
-                                        <code><%= identifier.serial_number %></code>
-                                    <% } else { %>
-                                        <span class="text-muted">-</span>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <a href="/product-versions/<%= identifier.product_version_id %>" class="text-decoration-none">
-                                        <%= identifier.product_version_name %>
-                                    </a>
-                                </td>
-                                <td>
-                                    <% 
-                                        let statusClass = '';
-                                        let statusText = '';
-                                        switch(identifier.status) {
-                                            case 'in_stock':
-                                                statusClass = 'bg-success';
-                                                statusText = 'Op voorraad';
-                                                break;
-                                            case 'sold':
-                                                statusClass = 'bg-primary';
-                                                statusText = 'Verkocht';
-                                                break;
-                                            case 'defective':
-                                                statusClass = 'bg-danger';
-                                                statusText = 'Defect';
-                                                break;
-                                            case 'missing':
-                                                statusClass = 'bg-warning';
-                                                statusText = 'Vermist';
-                                                break;
-                                            case 'reserved':
-                                                statusClass = 'bg-info';
-                                                statusText = 'Gereserveerd';
-                                                break;
-                                        }
-                                    %>
-                                    <span class="badge <%= statusClass %>">
-                                        <%= statusText %>
+<!-- Main Content -->
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <% if (identifiers.length === 0) { %>
+        <div class="text-center py-12">
+            <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Geen identifiers gevonden</h3>
+            <p class="text-gray-500 mb-6">Pas je zoekfilters aan of boek nieuwe voorraad in.</p>
+        </div>
+    <% } else { %>
+        <table class="table-minimal w-full">
+            <thead>
+                <tr>
+                    <th class="w-8">
+                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    </th>
+                    <th class="text-left">
+                        <div class="flex items-center gap-1">
+                            ID
+                            <i class="fas fa-sort-up text-xs text-gray-400"></i>
+                        </div>
+                    </th>
+                    <th class="text-left">IMEI</th>
+                    <th class="text-left">Serienummer</th>
+                    <th class="text-left">Productversie</th>
+                    <th class="text-left">Status</th>
+                    <th class="text-left">Koopje</th>
+                    <th class="text-left">Acties</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% identifiers.forEach(identifier => { %>
+                    <tr class="group">
+                        <td>
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </td>
+                        <td class="font-medium text-gray-900"><%= identifier.id %></td>
+                        <td>
+                            <% if (identifier.imei) { %>
+                                <code class="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800"><%= identifier.imei %></code>
+                            <% } else { %>
+                                <span class="text-gray-400">-</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <% if (identifier.serial_number) { %>
+                                <code class="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800"><%= identifier.serial_number %></code>
+                            <% } else { %>
+                                <span class="text-gray-400">-</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <a href="/product-versions/<%= identifier.product_version_id %>" class="text-blue-600 hover:text-blue-800 underline font-medium">
+                                <%= identifier.product_version_name %>
+                            </a>
+                        </td>
+                        <td>
+                            <% 
+                                let statusClass = '';
+                                let statusText = '';
+                                switch(identifier.status) {
+                                    case 'in_stock':
+                                        statusClass = 'bg-green-100 text-green-700';
+                                        statusText = 'Op voorraad';
+                                        break;
+                                    case 'sold':
+                                        statusClass = 'bg-blue-100 text-blue-700';
+                                        statusText = 'Verkocht';
+                                        break;
+                                    case 'defective':
+                                        statusClass = 'bg-red-100 text-red-700';
+                                        statusText = 'Defect';
+                                        break;
+                                    case 'missing':
+                                        statusClass = 'bg-amber-100 text-amber-700';
+                                        statusText = 'Vermist';
+                                        break;
+                                    case 'reserved':
+                                        statusClass = 'bg-purple-100 text-purple-700';
+                                        statusText = 'Gereserveerd';
+                                        break;
+                                }
+                            %>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= statusClass %>">
+                                <%= statusText %>
+                            </span>
+                        </td>
+                        <td>
+                            <% if (identifier.is_clearance) { %>
+                                <div class="flex flex-col gap-1">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                                        <i class="fas fa-tag mr-1"></i>
+                                        Koopje
                                     </span>
-                                </td>
-                                <td>
-                                    <% if (identifier.is_clearance) { %>
-                                        <span class="badge bg-warning">
-                                            <i class="fas fa-tag me-1"></i>
-                                            Koopje
-                                        </span>
-                                        <% if (identifier.clearance_price) { %>
-                                            <br><small class="text-muted">€<%= parseFloat(identifier.clearance_price).toFixed(2) %></small>
-                                        <% } %>
-                                    <% } else { %>
-                                        <span class="text-muted">-</span>
+                                    <% if (identifier.clearance_price) { %>
+                                        <span class="text-xs text-gray-500">€<%= parseFloat(identifier.clearance_price).toFixed(2) %></span>
                                     <% } %>
-                                </td>
-                                <td>
-                                    <a href="/identifiers/<%= identifier.id %>" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i> Bekijken
-                                    </a>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
+                                </div>
+                            <% } else { %>
+                                <span class="text-gray-400">-</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <button onclick="window.location.href='/identifiers/<%= identifier.id %>'" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Bekijken
+                            </button>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div class="text-sm text-gray-500">
+                <%= identifiers.length %> resultaten
             </div>
-        <% } %>
-    </div>
+            <div class="flex items-center space-x-2">
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">Vorige</button>
+                <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded">1</button>
+                <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">Volgende</button>
+            </div>
+        </div>
+    <% } %>
 </div>
 
 <%- include('partials/footer') %>
