@@ -287,21 +287,34 @@ app.get('/identifiers/:id', (req, res) => {
                         return res.status(500).json({ error: err.message });
                     }
                     
-                    // Get all available product versions for the version change modal
-                    db.all(`SELECT * FROM product_versions ORDER BY name`, (err, productVersions) => {
+                    // Get clearance history
+                    db.all(`
+                        SELECT * FROM clearance_history 
+                        WHERE device_identifier_id = ? 
+                        ORDER BY created_at DESC
+                    `, [identifierId], (err, clearanceHistory) => {
                         if (err) {
                             console.error(err);
                             return res.status(500).json({ error: err.message });
                         }
                         
-                        res.render('identifier-detail', { 
-                            identifier: identifier,
-                            statusHistory: statusHistory,
-                            versionHistory: versionHistory,
-                            identifierHistory: identifierHistory,
-                            productVersions: productVersions,
-                            error: req.query.error || null,
-                            success: req.query.success || null
+                        // Get all available product versions for the version change modal
+                        db.all(`SELECT * FROM product_versions ORDER BY name`, (err, productVersions) => {
+                            if (err) {
+                                console.error(err);
+                                return res.status(500).json({ error: err.message });
+                            }
+                            
+                            res.render('identifier-detail', { 
+                                identifier: identifier,
+                                statusHistory: statusHistory,
+                                versionHistory: versionHistory,
+                                identifierHistory: identifierHistory,
+                                clearanceHistory: clearanceHistory,
+                                productVersions: productVersions,
+                                error: req.query.error || null,
+                                success: req.query.success || null
+                            });
                         });
                     });
                 });
@@ -633,8 +646,8 @@ app.post('/identifiers/:id/toggle-clearance', (req, res) => {
     const identifierId = req.params.id;
     const { clearance_price, clearance_reason, remove_clearance } = req.body;
     
-    // Get current identifier details
-    db.get(`SELECT status, is_clearance FROM device_identifiers WHERE id = ?`, [identifierId], (err, current) => {
+    // Get current identifier details including clearance info
+    db.get(`SELECT status, is_clearance, clearance_price, clearance_reason FROM device_identifiers WHERE id = ?`, [identifierId], (err, current) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ error: err.message });
@@ -682,10 +695,42 @@ app.post('/identifiers/:id/toggle-clearance', (req, res) => {
                 return res.status(500).json({ error: err.message });
             }
             
-            const action = newClearanceStatus ? 'gemarkeerd als koopje' : 'koopje status verwijderd';
-            const successMessage = `Identifier succesvol ${action}`;
+            // Log clearance change to history
+            const newPrice = newClearanceStatus ? (clearance_price ? parseFloat(clearance_price) : null) : null;
+            const newReason = newClearanceStatus ? (clearance_reason || null) : null;
             
-            res.redirect(`/identifiers/${identifierId}?success=${encodeURIComponent(successMessage)}`);
+            db.run(`
+                INSERT INTO clearance_history (
+                    device_identifier_id, 
+                    old_is_clearance, 
+                    new_is_clearance,
+                    old_clearance_price,
+                    new_clearance_price,
+                    old_clearance_reason,
+                    new_clearance_reason,
+                    changed_by, 
+                    note
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                identifierId,
+                current.is_clearance || false,
+                newClearanceStatus,
+                current.clearance_price,
+                newPrice,
+                current.clearance_reason,
+                newReason,
+                'admin',
+                newClearanceStatus ? 'Gemarkeerd als koopje' : 'Koopje status verwijderd'
+            ], (historyErr) => {
+                if (historyErr) {
+                    console.error('Failed to log clearance history:', historyErr);
+                }
+                
+                const action = newClearanceStatus ? 'gemarkeerd als koopje' : 'koopje status verwijderd';
+                const successMessage = `Identifier succesvol ${action}`;
+                
+                res.redirect(`/identifiers/${identifierId}?success=${encodeURIComponent(successMessage)}`);
+            });
         });
     });
 });
@@ -990,13 +1035,11 @@ app.post('/deliveries/:id/book', (req, res) => {
         // Log status history for all identifiers created from this delivery
         db.run(`
             INSERT INTO status_history (device_identifier_id, old_status, new_status, changed_by, note)
-            SELECT di.id, NULL, 'in_stock', 'system', 'Ingeboekt via levering'
+            SELECT di.id, NULL, 'in_stock', 'system', 'Ingeboekt via levering ' || d.delivery_number
             FROM device_identifiers di
-            JOIN delivery_lines dl ON di.product_version_id = dl.product_version_id
-            WHERE dl.delivery_id = ? AND di.created_at >= (
-                SELECT created_at FROM deliveries WHERE id = ?
-            )
-        `, [deliveryId, deliveryId], function(err) {
+            JOIN deliveries d ON di.delivery_id = d.id
+            WHERE di.delivery_id = ?
+        `, [deliveryId], function(err) {
             if (err) {
                 console.error(err);
                 return res.status(500).json({ error: err.message });

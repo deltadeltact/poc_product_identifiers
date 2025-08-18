@@ -149,6 +149,24 @@ db.serialize(() => {
         )
     `);
 
+    // Clearance history table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS clearance_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_identifier_id INTEGER NOT NULL,
+            old_is_clearance BOOLEAN,
+            new_is_clearance BOOLEAN NOT NULL,
+            old_clearance_price DECIMAL(10,2),
+            new_clearance_price DECIMAL(10,2),
+            old_clearance_reason TEXT,
+            new_clearance_reason TEXT,
+            changed_by TEXT NOT NULL DEFAULT 'admin',
+            note TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (device_identifier_id) REFERENCES device_identifiers (id)
+        )
+    `);
+
     console.log('Database schema created successfully!');
     
     // Insert some sample data
@@ -239,29 +257,28 @@ db.serialize(() => {
         (8, 8, 1, NULL, 'AWSE40002', NULL, 'AWSE40002', 'missing', 259.00)
     `);
 
-    // Sample status history for all identifiers
+    // Create initial status history for ALL identifiers - they all start as 'in_stock' when delivered
+    db.run(`
+        INSERT OR IGNORE INTO status_history (device_identifier_id, old_status, new_status, changed_by, note)
+        SELECT 
+            di.id,
+            NULL as old_status,
+            'in_stock' as new_status,
+            'system' as changed_by,
+            'Ingeboekt via levering ' || d.delivery_number as note
+        FROM device_identifiers di
+        JOIN deliveries d ON di.delivery_id = d.id
+    `);
+
+    // Add additional status changes for items that are no longer in_stock
     db.run(`INSERT OR IGNORE INTO status_history (device_identifier_id, old_status, new_status, changed_by, note) VALUES 
-        (1, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
-        (2, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+        -- Items that were sold
         (3, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
-        (4, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
-        (5, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
-        (6, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
-        (7, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
-        (8, 'in_stock', 'reserved', 'admin', 'Gereserveerd voor klant'),
-        (9, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
-        (10, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
         (11, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
-        (12, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
-        (13, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
-        (14, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0003'),
-        (15, 'in_stock', 'defective', 'admin', 'Scherm beschadigd bij controle'),
-        (16, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
-        (17, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
         (18, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
-        (19, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
-        (20, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0002'),
-        (21, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+        -- Items with other status changes
+        (8, 'in_stock', 'reserved', 'admin', 'Gereserveerd voor klant'),
+        (15, 'in_stock', 'defective', 'admin', 'Scherm beschadigd bij controle'),
         (22, 'in_stock', 'missing', 'admin', 'Niet gevonden bij inventarisatie')
     `);
 

@@ -388,6 +388,76 @@
 </div>
 <% } %>
 
+<!-- Clearance History -->
+<% if (clearanceHistory.length > 0) { %>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-tag me-2"></i>
+            Koopjes geschiedenis
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Datum/tijd</th>
+                        <th>Status wijziging</th>
+                        <th>Oude prijs</th>
+                        <th>Nieuwe prijs</th>
+                        <th>Reden</th>
+                        <th>Gewijzigd door</th>
+                        <th>Notitie</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% clearanceHistory.forEach(history => { %>
+                        <tr>
+                            <td><%= new Date(history.created_at).toLocaleString('nl-NL') %></td>
+                            <td>
+                                <% if (history.old_is_clearance && !history.new_is_clearance) { %>
+                                    <span class="badge bg-warning">Koopje verwijderd</span>
+                                <% } else if (!history.old_is_clearance && history.new_is_clearance) { %>
+                                    <span class="badge bg-success">Gemarkeerd als koopje</span>
+                                <% } else if (history.old_is_clearance && history.new_is_clearance) { %>
+                                    <span class="badge bg-info">Koopje gewijzigd</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (history.old_clearance_price) { %>
+                                    €<%= parseFloat(history.old_clearance_price).toFixed(2) %>
+                                <% } else { %>
+                                    <span class="text-muted">-</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (history.new_clearance_price) { %>
+                                    €<%= parseFloat(history.new_clearance_price).toFixed(2) %>
+                                <% } else { %>
+                                    <span class="text-muted">-</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (history.new_clearance_reason) { %>
+                                    <%= history.new_clearance_reason %>
+                                <% } else if (history.old_clearance_reason && !history.new_is_clearance) { %>
+                                    <span class="text-muted"><strike><%= history.old_clearance_reason %></strike></span>
+                                <% } else { %>
+                                    <span class="text-muted">-</span>
+                                <% } %>
+                            </td>
+                            <td><%= history.changed_by %></td>
+                            <td><%= history.note || '-' %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<% } %>
+
 <!-- Identifier Change Modal -->
 <div class="modal fade" id="swapModal" tabindex="-1">
     <div class="modal-dialog">
