@@ -12,7 +12,10 @@
       "Bash(curl:*)",
       "Bash(del database.sqlite)",
       "Bash(git add:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(git push:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run reset-db:*)"
     ],
     "deny": [],
     "ask": [],

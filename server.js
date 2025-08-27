@@ -118,7 +118,7 @@ app.get('/product-versions/:id', (req, res) => {
             return res.status(404).send('Product version not found');
         }
         
-        // Get associated identifiers
+        // Get associated identifiers (including clearance information)
         db.all(`
             SELECT * FROM device_identifiers 
             WHERE product_version_id = ? 

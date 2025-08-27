@@ -114,16 +114,22 @@
                     </form>
                 <% } else { %>
                     <div class="row text-center">
-                        <div class="col-6">
+                        <div class="col-4">
                             <div class="border rounded p-3">
-                                <h3 class="text-success mb-1"><%= identifiers.filter(i => i.status === 'in_stock').length %></h3>
+                                <h3 class="text-success mb-1"><%= identifiers.filter(i => i.status === 'in_stock' && !i.is_clearance).length %></h3>
                                 <small class="text-muted">Op voorraad</small>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <h3 class="text-warning mb-1"><%= identifiers.filter(i => i.status === 'in_stock' && i.is_clearance).length %></h3>
+                                <small class="text-muted">Koopjes</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
                             <div class="border rounded p-3">
                                 <h3 class="text-primary mb-1"><%= identifiers.length %></h3>
-                                <small class="text-muted">Totaal identifiers</small>
+                                <small class="text-muted">Totaal</small>
                             </div>
                         </div>
                     </div>
@@ -133,13 +139,15 @@
                         <div class="progress" style="height: 20px;">
                             <% 
                                 const total = identifiers.length;
-                                const inStock = identifiers.filter(i => i.status === 'in_stock').length;
+                                const inStock = identifiers.filter(i => i.status === 'in_stock' && !i.is_clearance).length;
+                                const clearanceStock = identifiers.filter(i => i.status === 'in_stock' && i.is_clearance).length;
                                 const sold = identifiers.filter(i => i.status === 'sold').length;
                                 const defective = identifiers.filter(i => i.status === 'defective').length;
                                 const missing = identifiers.filter(i => i.status === 'missing').length;
                                 const reserved = identifiers.filter(i => i.status === 'reserved').length;
                                 
                                 const inStockPct = total > 0 ? (inStock / total) * 100 : 0;
+                                const clearancePct = total > 0 ? (clearanceStock / total) * 100 : 0;
                                 const soldPct = total > 0 ? (sold / total) * 100 : 0;
                                 const defectivePct = total > 0 ? (defective / total) * 100 : 0;
                                 const missingPct = total > 0 ? (missing / total) * 100 : 0;
@@ -147,6 +155,9 @@
                             %>
                             <% if (inStockPct > 0) { %>
                                 <div class="progress-bar bg-success" style="width: <%= inStockPct %>%" title="<%= inStock %> op voorraad"></div>
+                            <% } %>
+                            <% if (clearancePct > 0) { %>
+                                <div class="progress-bar bg-warning" style="width: <%= clearancePct %>%" title="<%= clearanceStock %> koopjes"></div>
                             <% } %>
                             <% if (soldPct > 0) { %>
                                 <div class="progress-bar bg-primary" style="width: <%= soldPct %>%" title="<%= sold %> verkocht"></div>
@@ -301,6 +312,11 @@
                                         <span class="badge <%= statusClass %>">
                                             <%= statusText %>
                                         </span>
+                                        <% if (identifier.is_clearance) { %>
+                                            <span class="badge bg-warning ms-1">
+                                                Koopje
+                                            </span>
+                                        <% } %>
                                     </td>
                                     <td><%= new Date(identifier.updated_at).toLocaleDateString('nl-NL') %></td>
                                     <td>
