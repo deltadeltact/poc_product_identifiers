@@ -1021,7 +1021,120 @@ app.post('/deliveries/:id/lines', (req, res) => {
 app.post('/deliveries/:id/book', (req, res) => {
     const deliveryId = req.params.id;
     
-    // Update delivery status to booked
+    // Check if delivery has tracked items that need damage assessment
+    db.get(`
+        SELECT COUNT(*) as tracked_count
+        FROM delivery_lines dl
+        JOIN product_versions pv ON dl.product_version_id = pv.id
+        WHERE dl.delivery_id = ? AND pv.tracking_mode != 'none'
+    `, [deliveryId], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: err.message });
+        }
+        
+        if (result.tracked_count > 0) {
+            // Has tracked items, redirect to damage assessment
+            res.redirect(`/deliveries/${deliveryId}/assess-damage`);
+        } else {
+            // No tracked items, complete booking immediately
+            db.run(`
+                UPDATE deliveries 
+                SET status = 'booked', updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+            `, [deliveryId], function(err) {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ error: err.message });
+                }
+                res.redirect(`/deliveries/${deliveryId}`);
+            });
+        }
+    });
+});
+
+// Damage assessment routes
+app.get('/deliveries/:id/assess-damage', (req, res) => {
+    const deliveryId = req.params.id;
+    
+    // Get delivery details
+    db.get(`
+        SELECT d.*, 
+               COUNT(DISTINCT dl.id) as line_count,
+               SUM(dl.quantity * dl.purchase_price_per_unit) as total_value
+        FROM deliveries d
+        LEFT JOIN delivery_lines dl ON d.id = dl.delivery_id
+        WHERE d.id = ?
+        GROUP BY d.id
+    `, [deliveryId], (err, delivery) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        
+        if (!delivery) {
+            return res.status(404).send('Delivery not found');
+        }
+        
+        // Get all identifiers for this delivery that need damage assessment
+        db.all(`
+            SELECT di.*, pv.name as product_name, pv.tracking_mode,
+                   d.delivery_number
+            FROM device_identifiers di
+            JOIN product_versions pv ON di.product_version_id = pv.id
+            JOIN deliveries d ON di.delivery_id = d.id
+            WHERE di.delivery_id = ?
+            ORDER BY pv.name, di.id
+        `, [deliveryId], (err, identifiers) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Database error');
+            }
+            
+            res.render('damage-assessment', {
+                delivery,
+                identifiers
+            });
+        });
+    });
+});
+
+app.post('/deliveries/:id/assess-damage', (req, res) => {
+    const deliveryId = req.params.id;
+    const { damage_assessment } = req.body;
+    
+    // Process damage assessment for each identifier
+    const stmt = db.prepare(`
+        UPDATE device_identifiers 
+        SET status = ?, received_damaged = ?, damage_description = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    `);
+    
+    const statusHistoryStmt = db.prepare(`
+        INSERT INTO status_history (device_identifier_id, old_status, new_status, changed_by, note)
+        VALUES (?, NULL, ?, 'system', ?)
+    `);
+    
+    if (damage_assessment) {
+        Object.keys(damage_assessment).forEach(identifierId => {
+            const assessment = damage_assessment[identifierId];
+            const isDamaged = assessment.is_damaged === 'true';
+            const status = isDamaged ? 'defective_at_delivery' : 'in_stock';
+            const damageDescription = isDamaged ? assessment.damage_description : null;
+            
+            stmt.run([status, isDamaged, damageDescription, identifierId]);
+            
+            const historyNote = isDamaged 
+                ? `Defect geconstateerd bij levering - ${damageDescription}`
+                : 'Ingeboekt via levering';
+            statusHistoryStmt.run([identifierId, status, historyNote]);
+        });
+    }
+    
+    stmt.finalize();
+    statusHistoryStmt.finalize();
+    
+    // Complete the delivery booking
     db.run(`
         UPDATE deliveries 
         SET status = 'booked', updated_at = CURRENT_TIMESTAMP 
@@ -1032,77 +1145,476 @@ app.post('/deliveries/:id/book', (req, res) => {
             return res.status(500).json({ error: err.message });
         }
         
-        // Log status history for all identifiers created from this delivery
-        db.run(`
-            INSERT INTO status_history (device_identifier_id, old_status, new_status, changed_by, note)
-            SELECT di.id, NULL, 'in_stock', 'system', 'Ingeboekt via levering ' || d.delivery_number
-            FROM device_identifiers di
-            JOIN deliveries d ON di.delivery_id = d.id
-            WHERE di.delivery_id = ?
-        `, [deliveryId], function(err) {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ error: err.message });
-            }
-            
-            res.redirect(`/deliveries/${deliveryId}`);
+        res.redirect(`/deliveries/${deliveryId}`);
+    });
+});
+
+// Damage review routes
+app.get('/damage-review', (req, res) => {
+    // Get all items marked as defective_at_delivery
+    db.all(`
+        SELECT di.*, pv.name as product_name, pv.tracking_mode,
+               d.delivery_number, d.supplier, d.delivery_date
+        FROM device_identifiers di
+        JOIN product_versions pv ON di.product_version_id = pv.id
+        JOIN deliveries d ON di.delivery_id = d.id
+        WHERE di.status = 'defective_at_delivery'
+        ORDER BY di.created_at DESC
+    `, (err, damagedItems) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        
+        res.render('damage-review', {
+            damagedItems
         });
     });
 });
 
-// Admin routes
-app.post('/admin/reset-database', (req, res) => {
-    const { exec } = require('child_process');
+app.post('/damage-review/action', (req, res) => {
+    const { action, identifier_ids, clearance_price, clearance_reason } = req.body;
     
+    if (!action || !identifier_ids || (Array.isArray(identifier_ids) && identifier_ids.length === 0)) {
+        return res.status(400).json({ error: 'Action and identifier IDs are required' });
+    }
+    
+    const identifierList = Array.isArray(identifier_ids) ? identifier_ids : [identifier_ids];
+    
+    let newStatus;
+    let statusNote;
+    
+    switch (action) {
+        case 'return_to_supplier':
+            newStatus = 'returned_to_supplier';
+            statusNote = 'Geretourneerd naar leverancier wegens defect bij levering';
+            break;
+        case 'mark_as_clearance':
+            newStatus = 'in_stock';
+            statusNote = `Naar koopjeskelder - ${clearance_reason || 'Schade bij levering'}`;
+            break;
+        case 'write_off':
+            newStatus = 'written_off';
+            statusNote = 'Afgeboekt wegens te grote schade bij levering';
+            break;
+        default:
+            return res.status(400).json({ error: 'Invalid action' });
+    }
+    
+    // Update identifiers
+    const updateStmt = db.prepare(`
+        UPDATE device_identifiers 
+        SET status = ?, is_clearance = ?, clearance_price = ?, clearance_reason = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    `);
+    
+    const statusHistoryStmt = db.prepare(`
+        INSERT INTO status_history (device_identifier_id, old_status, new_status, changed_by, note)
+        VALUES (?, 'defective_at_delivery', ?, 'admin', ?)
+    `);
+    
+    const clearanceHistoryStmt = db.prepare(`
+        INSERT INTO clearance_history (device_identifier_id, old_is_clearance, new_is_clearance, old_clearance_price, new_clearance_price, old_clearance_reason, new_clearance_reason, changed_by, note)
+        VALUES (?, FALSE, TRUE, NULL, ?, NULL, ?, 'admin', 'Moved to clearance from damage review')
+    `);
+    
+    identifierList.forEach(id => {
+        if (action === 'mark_as_clearance') {
+            updateStmt.run([newStatus, true, parseFloat(clearance_price) || null, clearance_reason, id]);
+            clearanceHistoryStmt.run([id, parseFloat(clearance_price) || null, clearance_reason]);
+        } else {
+            updateStmt.run([newStatus, false, null, null, id]);
+        }
+        statusHistoryStmt.run([id, newStatus, statusNote]);
+    });
+    
+    updateStmt.finalize();
+    statusHistoryStmt.finalize();
+    clearanceHistoryStmt.finalize();
+    
+    res.json({ success: true, message: `${identifierList.length} item(s) processed successfully` });
+});
+
+// Admin routes
+// Database reset function
+function resetDatabaseToDefaults(callback) {
+    const fs = require('fs');
+    
+    // Create new database (will overwrite existing)
+    const resetDb = new sqlite3.Database(dbPath);
+    
+    console.log('Creating fresh database with initial schema and data...');
+    
+    resetDb.serialize(() => {
+        // Drop all tables first
+        console.log('Dropping existing tables...');
+        resetDb.run(`DROP TABLE IF EXISTS clearance_history`);
+        resetDb.run(`DROP TABLE IF EXISTS bulk_stock_history`);
+        resetDb.run(`DROP TABLE IF EXISTS bulk_stock`);
+        resetDb.run(`DROP TABLE IF EXISTS delivery_lines`);
+        resetDb.run(`DROP TABLE IF EXISTS deliveries`);
+        resetDb.run(`DROP TABLE IF EXISTS identifier_history`);
+        resetDb.run(`DROP TABLE IF EXISTS product_version_history`);
+        resetDb.run(`DROP TABLE IF EXISTS status_history`);
+        resetDb.run(`DROP TABLE IF EXISTS device_identifiers`);
+        resetDb.run(`DROP TABLE IF EXISTS product_versions`);
+
+        // Create complete database schema
+        resetDb.exec(`
+            -- Product versions table
+            CREATE TABLE IF NOT EXISTS product_versions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                ean TEXT,
+                tracking_mode TEXT NOT NULL DEFAULT 'none' 
+                    CHECK (tracking_mode IN ('none', 'imei', 'serial')),
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- Device identifiers table
+            CREATE TABLE IF NOT EXISTS device_identifiers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_version_id INTEGER NOT NULL,
+                original_product_version_id INTEGER,
+                delivery_id INTEGER,
+                imei TEXT,
+                serial_number TEXT,
+                original_imei TEXT,
+                original_serial_number TEXT,
+                status TEXT NOT NULL DEFAULT 'in_stock' 
+                    CHECK (status IN ('in_stock', 'sold', 'defective', 'missing', 'reserved', 'defective_at_delivery', 'returned_to_supplier', 'written_off')),
+                received_damaged BOOLEAN DEFAULT FALSE,
+                damage_description TEXT,
+                is_clearance BOOLEAN DEFAULT FALSE,
+                clearance_price DECIMAL(10,2),
+                clearance_reason TEXT,
+                purchase_price DECIMAL(10,2),
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (product_version_id) REFERENCES product_versions (id),
+                FOREIGN KEY (original_product_version_id) REFERENCES product_versions (id),
+                FOREIGN KEY (delivery_id) REFERENCES deliveries (id),
+                UNIQUE(imei),
+                UNIQUE(serial_number)
+            );
+
+            -- Deliveries table
+            CREATE TABLE IF NOT EXISTS deliveries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                delivery_number TEXT NOT NULL UNIQUE,
+                delivery_date DATE NOT NULL,
+                supplier TEXT,
+                status TEXT NOT NULL DEFAULT 'concept' 
+                    CHECK (status IN ('concept', 'booked', 'partially_booked')),
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- Delivery lines table
+            CREATE TABLE IF NOT EXISTS delivery_lines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                delivery_id INTEGER NOT NULL,
+                product_version_id INTEGER NOT NULL,
+                quantity INTEGER NOT NULL,
+                purchase_price_per_unit DECIMAL(10,2) NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (delivery_id) REFERENCES deliveries (id),
+                FOREIGN KEY (product_version_id) REFERENCES product_versions (id)
+            );
+
+            -- Status history table
+            CREATE TABLE IF NOT EXISTS status_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_identifier_id INTEGER NOT NULL,
+                old_status TEXT,
+                new_status TEXT NOT NULL,
+                changed_by TEXT NOT NULL DEFAULT 'system',
+                note TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (device_identifier_id) REFERENCES device_identifiers (id)
+            );
+
+            -- Bulk stock table for non-tracked products
+            CREATE TABLE IF NOT EXISTS bulk_stock (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_version_id INTEGER NOT NULL,
+                quantity INTEGER NOT NULL DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (product_version_id) REFERENCES product_versions (id),
+                UNIQUE(product_version_id)
+            );
+
+            -- History tables
+            CREATE TABLE IF NOT EXISTS product_version_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_identifier_id INTEGER NOT NULL,
+                old_product_version_id INTEGER NOT NULL,
+                new_product_version_id INTEGER NOT NULL,
+                changed_by TEXT NOT NULL DEFAULT 'system',
+                note TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (device_identifier_id) REFERENCES device_identifiers (id),
+                FOREIGN KEY (old_product_version_id) REFERENCES product_versions (id),
+                FOREIGN KEY (new_product_version_id) REFERENCES product_versions (id)
+            );
+
+            CREATE TABLE IF NOT EXISTS identifier_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_identifier_id INTEGER NOT NULL,
+                old_imei TEXT,
+                new_imei TEXT,
+                old_serial_number TEXT,
+                new_serial_number TEXT,
+                changed_by TEXT NOT NULL DEFAULT 'system',
+                note TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (device_identifier_id) REFERENCES device_identifiers (id)
+            );
+
+            CREATE TABLE IF NOT EXISTS bulk_stock_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_version_id INTEGER NOT NULL,
+                old_quantity INTEGER NOT NULL,
+                new_quantity INTEGER NOT NULL,
+                change_quantity INTEGER NOT NULL,
+                changed_by TEXT NOT NULL DEFAULT 'system',
+                note TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (product_version_id) REFERENCES product_versions (id)
+            );
+
+            CREATE TABLE IF NOT EXISTS clearance_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_identifier_id INTEGER NOT NULL,
+                old_is_clearance BOOLEAN,
+                new_is_clearance BOOLEAN NOT NULL,
+                old_clearance_price DECIMAL(10,2),
+                new_clearance_price DECIMAL(10,2),
+                old_clearance_reason TEXT,
+                new_clearance_reason TEXT,
+                changed_by TEXT NOT NULL DEFAULT 'admin',
+                note TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (device_identifier_id) REFERENCES device_identifiers (id)
+            );
+        `, (error) => {
+            if (error) {
+                console.error('Schema creation failed:', error);
+                resetDb.close();
+                return callback(error);
+            }
+            
+            console.log('Database schema created successfully!');
+            
+            // Add comprehensive mobile retail product catalog
+            resetDb.run(`
+                INSERT INTO product_versions (id, name, ean, tracking_mode) VALUES
+                -- Phones (IMEI tracking)
+                (1, 'iPhone 15 Pro 128GB Space Black', '1234567890101', 'imei'),
+                (2, 'iPhone 15 256GB Blue', '1234567890102', 'imei'),
+                (3, 'Samsung Galaxy S24 128GB Phantom Black', '1234567890103', 'imei'),
+                (4, 'Samsung Galaxy S24 Ultra 256GB Titanium Gray', '1234567890104', 'imei'),
+                (5, 'Xiaomi 14 256GB Jade Green', '1234567890105', 'imei'),
+                -- Audio devices (Serial tracking)
+                (6, 'AirPods Pro 2nd Gen USB-C', '1234567890106', 'serial'),
+                -- Smartwatches (Serial tracking)
+                (7, 'Apple Watch Series 9 45mm Midnight', '1234567890107', 'serial'),
+                (8, 'Samsung Galaxy Watch 6 44mm Silver', '1234567890108', 'serial'),
+                -- Accessories (No tracking - bulk)
+                (9, 'Screen Protector Tempered Glass Universal', '1234567890109', 'none'),
+                (10, 'Phone Case Clear Silicone Universal', '1234567890110', 'none')
+            `, (insertError) => {
+                if (insertError) {
+                    console.error('Product versions insertion failed:', insertError);
+                    resetDb.close();
+                    return callback(insertError);
+                }
+                
+                // Add bulk stock for accessories
+                resetDb.run(`
+                    INSERT INTO bulk_stock (product_version_id, quantity) VALUES
+                    (9, 50),  -- Screen protectors
+                    (10, 30)  -- Phone cases
+                `, (bulkError) => {
+                    if (bulkError) {
+                        console.error('Bulk stock insertion failed:', bulkError);
+                        resetDb.close();
+                        return callback(bulkError);
+                    }
+                    
+                    // Add sample deliveries
+                    resetDb.run(`
+                        INSERT INTO deliveries (id, delivery_number, delivery_date, supplier, status) VALUES
+                        (1, 'WS0001', '2025-01-10', 'Apple Distribution Europe', 'booked'),
+                        (2, 'WS0002', '2025-01-12', 'Samsung Electronics Benelux', 'booked'),
+                        (3, 'WS0003', '2025-01-15', 'Xiaomi Global Distribution', 'booked')
+                    `, (deliveryError) => {
+                        if (deliveryError) {
+                            console.error('Delivery data insertion failed:', deliveryError);
+                            resetDb.close();
+                            return callback(deliveryError);
+                        }
+                        
+                        // Add sample delivery lines
+                        resetDb.run(`
+                            INSERT INTO delivery_lines (delivery_id, product_version_id, quantity, purchase_price_per_unit) VALUES
+                            -- Apple delivery
+                            (1, 1, 5, 899.00),    -- iPhone 15 Pro
+                            (1, 2, 3, 799.00),    -- iPhone 15
+                            (1, 6, 4, 249.00),    -- AirPods Pro
+                            (1, 7, 2, 399.00),    -- Apple Watch
+                            -- Samsung delivery
+                            (2, 3, 4, 849.00),    -- Galaxy S24
+                            (2, 4, 2, 1199.00),   -- Galaxy S24 Ultra
+                            (2, 8, 3, 299.00),    -- Galaxy Watch
+                            -- Xiaomi delivery
+                            (3, 5, 6, 699.00),    -- Xiaomi 14
+                            (3, 9, 50, 12.99),    -- Screen protectors
+                            (3, 10, 30, 19.99)    -- Phone cases
+                        `, (lineError) => {
+                            if (lineError) {
+                                console.error('Delivery lines insertion failed:', lineError);
+                                resetDb.close();
+                                return callback(lineError);
+                            }
+                            
+                            // Add sample device identifiers with some defective items
+                            resetDb.run(`
+                                INSERT INTO device_identifiers 
+                                (product_version_id, delivery_id, imei, serial_number, status, received_damaged, damage_description, purchase_price) VALUES
+                                -- iPhone 15 Pro (IMEI tracking)
+                                (1, 1, '351234567890101', NULL, 'in_stock', 0, NULL, 899.00),
+                                (1, 1, '351234567890102', NULL, 'in_stock', 0, NULL, 899.00),
+                                (1, 1, '351234567890103', NULL, 'defective_at_delivery', 1, 'Screen cracked during shipping', 899.00),
+                                (1, 1, '351234567890104', NULL, 'in_stock', 0, NULL, 899.00),
+                                (1, 1, '351234567890105', NULL, 'sold', 0, NULL, 899.00),
+                                -- iPhone 15 (IMEI tracking)
+                                (2, 1, '351234567890201', NULL, 'in_stock', 0, NULL, 799.00),
+                                (2, 1, '351234567890202', NULL, 'in_stock', 0, NULL, 799.00),
+                                (2, 1, '351234567890203', NULL, 'in_stock', 0, NULL, 799.00),
+                                -- Galaxy S24 (IMEI tracking)
+                                (3, 2, '351234567890301', NULL, 'in_stock', 0, NULL, 849.00),
+                                (3, 2, '351234567890302', NULL, 'in_stock', 0, NULL, 849.00),
+                                (3, 2, '351234567890303', NULL, 'sold', 0, NULL, 849.00),
+                                (3, 2, '351234567890304', NULL, 'in_stock', 0, NULL, 849.00),
+                                -- Galaxy S24 Ultra (IMEI tracking)
+                                (4, 2, '351234567890401', NULL, 'in_stock', 0, NULL, 1199.00),
+                                (4, 2, '351234567890402', NULL, 'defective_at_delivery', 1, 'Minor scratches on back panel', 1199.00),
+                                -- Xiaomi 14 (IMEI tracking)
+                                (5, 3, '351234567890501', NULL, 'in_stock', 0, NULL, 699.00),
+                                (5, 3, '351234567890502', NULL, 'in_stock', 0, NULL, 699.00),
+                                (5, 3, '351234567890503', NULL, 'in_stock', 0, NULL, 699.00),
+                                (5, 3, '351234567890504', NULL, 'reserved', 0, NULL, 699.00),
+                                (5, 3, '351234567890505', NULL, 'in_stock', 0, NULL, 699.00),
+                                (5, 3, '351234567890506', NULL, 'sold', 0, NULL, 699.00),
+                                -- AirPods Pro (Serial tracking)
+                                (6, 1, NULL, 'AP2UC24001', 'in_stock', 0, NULL, 249.00),
+                                (6, 1, NULL, 'AP2UC24002', 'in_stock', 0, NULL, 249.00),
+                                (6, 1, NULL, 'AP2UC24003', 'sold', 0, NULL, 249.00),
+                                (6, 1, NULL, 'AP2UC24004', 'defective_at_delivery', 1, 'Charging case dented', 249.00),
+                                -- Apple Watch Series 9 (Serial tracking)
+                                (7, 1, NULL, 'AW9S44001', 'in_stock', 0, NULL, 399.00),
+                                (7, 1, NULL, 'AW9S44002', 'sold', 0, NULL, 399.00),
+                                -- Galaxy Watch 6 (Serial tracking)
+                                (8, 2, NULL, 'GW6S44001', 'in_stock', 0, NULL, 299.00),
+                                (8, 2, NULL, 'GW6S44002', 'in_stock', 0, NULL, 299.00),
+                                (8, 2, NULL, 'GW6S44003', 'missing', 0, NULL, 299.00)
+                            `, (itemError) => {
+                                if (itemError) {
+                                    console.error('Device identifiers insertion failed:', itemError);
+                                    resetDb.close();
+                                    return callback(itemError);
+                                }
+                                
+                                // Add status history for the identifiers
+                                resetDb.run(`
+                                    INSERT INTO status_history (device_identifier_id, old_status, new_status, changed_by, note) VALUES
+                                    -- Delivery bookings (initial status)
+                                    (1, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+                                    (2, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+                                    (3, NULL, 'defective_at_delivery', 'system', 'Defect geconstateerd bij levering - Screen cracked during shipping'),
+                                    (4, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+                                    (5, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+                                    (6, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+                                    (7, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+                                    (8, NULL, 'in_stock', 'system', 'Ingeboekt via levering WS0001'),
+                                    -- Sales
+                                    (5, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
+                                    (11, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
+                                    (21, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
+                                    (25, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
+                                    (28, 'in_stock', 'sold', 'admin', 'Verkocht aan klant'),
+                                    -- Reservations
+                                    (18, 'in_stock', 'reserved', 'admin', 'Gereserveerd voor klant pickup'),
+                                    -- Missing items
+                                    (27, 'in_stock', 'missing', 'admin', 'Niet gevonden bij inventarisatie')
+                                `, (historyError) => {
+                                    if (historyError) {
+                                        console.error('Status history insertion failed:', historyError);
+                                        resetDb.close();
+                                        return callback(historyError);
+                                    }
+                                    
+                                    console.log('Fresh mobile retail sample data inserted successfully!');
+                                    resetDb.close();
+                                    callback(null);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+}
+
+app.post('/admin/reset-database', (req, res) => {
     console.log('Admin database reset requested...');
     
-    // Close the current database connection to release the lock
+    // Close the current database connection first
     db.close((closeErr) => {
         if (closeErr) {
-            console.error('Error closing database for reset:', closeErr);
+            console.error('Error closing database:', closeErr);
             return res.status(500).json({ 
                 success: false, 
                 error: 'Failed to close database connection: ' + closeErr.message 
             });
         }
         
-        console.log('Database connection closed for reset');
+        console.log('Database connection closed, executing reset...');
         
-        // Execute the reset script
-        exec('npm run reset-db', { cwd: __dirname }, (error, stdout, stderr) => {
-            // Reconnect to the database regardless of reset success/failure
-            const reconnectDb = () => {
-                db = new sqlite3.Database(dbPath, (reconnectErr) => {
-                    if (reconnectErr) {
-                        console.error('Failed to reconnect to database:', reconnectErr);
-                    } else {
-                        console.log('Database reconnected successfully');
-                    }
-                });
-            };
-            
-            if (error) {
-                console.error('Database reset failed:', error);
-                reconnectDb();
+        resetDatabaseToDefaults((resetError) => {
+            if (resetError) {
+                console.error('Database reset failed:', resetError);
+                
+                // Reconnect to database even if reset failed
+                db = new sqlite3.Database(dbPath);
+                
                 return res.status(500).json({ 
                     success: false, 
-                    error: 'Database reset failed: ' + error.message 
+                    error: 'Database reset failed: ' + resetError.message
                 });
-            }
-            
-            if (stderr) {
-                console.warn('Database reset warnings:', stderr);
             }
             
             console.log('Database reset completed successfully');
-            console.log(stdout);
             
             // Reconnect to the fresh database
-            reconnectDb();
-            
-            res.json({ 
-                success: true, 
-                message: 'Database has been successfully reset to initial mobile retail data.' 
+            db = new sqlite3.Database(dbPath, (reconnectErr) => {
+                if (reconnectErr) {
+                    console.error('Failed to reconnect to database:', reconnectErr);
+                    return res.status(500).json({ 
+                        success: false, 
+                        error: 'Failed to reconnect to database: ' + reconnectErr.message 
+                    });
+                } else {
+                    console.log('Database reconnected successfully');
+                    res.json({ 
+                        success: true, 
+                        message: 'Database has been successfully reset to initial data.' 
+                    });
+                }
             });
         });
     });

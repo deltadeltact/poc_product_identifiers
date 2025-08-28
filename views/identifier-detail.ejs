@@ -133,6 +133,18 @@
                                                 statusClass = 'bg-info';
                                                 statusText = 'Gereserveerd';
                                                 break;
+                                            case 'defective_at_delivery':
+                                                statusClass = 'bg-warning';
+                                                statusText = 'Defect bij levering';
+                                                break;
+                                            case 'returned_to_supplier':
+                                                statusClass = 'bg-secondary';
+                                                statusText = 'Geretourneerd';
+                                                break;
+                                            case 'written_off':
+                                                statusClass = 'bg-dark';
+                                                statusText = 'Afgeboekt';
+                                                break;
                                         }
                                     %>
                                     <span class="badge <%= statusClass %> fs-6">

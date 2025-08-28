@@ -40,6 +40,9 @@
                         <option value="defective" <%= filters.status === 'defective' ? 'selected' : '' %>>Defect</option>
                         <option value="missing" <%= filters.status === 'missing' ? 'selected' : '' %>>Vermist</option>
                         <option value="reserved" <%= filters.status === 'reserved' ? 'selected' : '' %>>Gereserveerd</option>
+                        <option value="defective_at_delivery" <%= filters.status === 'defective_at_delivery' ? 'selected' : '' %>>Defect bij levering</option>
+                        <option value="returned_to_supplier" <%= filters.status === 'returned_to_supplier' ? 'selected' : '' %>>Geretourneerd</option>
+                        <option value="written_off" <%= filters.status === 'written_off' ? 'selected' : '' %>>Afgeboekt</option>
                     </select>
                     <select id="clearance" name="clearance" class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                         <option value="">Alle items</option>
@@ -145,6 +148,18 @@
                                     case 'reserved':
                                         statusClass = 'bg-purple-100 text-purple-700';
                                         statusText = 'Gereserveerd';
+                                        break;
+                                    case 'defective_at_delivery':
+                                        statusClass = 'bg-orange-100 text-orange-700';
+                                        statusText = 'Defect bij levering';
+                                        break;
+                                    case 'returned_to_supplier':
+                                        statusClass = 'bg-gray-100 text-gray-700';
+                                        statusText = 'Geretourneerd';
+                                        break;
+                                    case 'written_off':
+                                        statusClass = 'bg-black text-white';
+                                        statusText = 'Afgeboekt';
                                         break;
                                 }
                             %>

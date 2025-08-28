@@ -4,34 +4,30 @@ const fs = require('fs');
 
 const dbPath = path.join(__dirname, '..', 'database.sqlite');
 
-console.log('=== DATABASE RESET AND RESEED ===');
+console.log('=== DATABASE FORCE RESET AND RESEED ===');
 console.log('This will completely reset the database and restore initial sample data.');
 console.log('WARNING: All existing data will be permanently lost!');
+console.log('This version works even if the server is running.');
 
-// Delete existing database file if it exists
-if (fs.existsSync(dbPath)) {
-    console.log('Deleting existing database...');
-    try {
-        fs.unlinkSync(dbPath);
-        console.log('Existing database deleted.');
-    } catch (error) {
-        if (error.code === 'EBUSY') {
-            console.log('⚠️  Database file is currently in use (server running?)');
-            console.log('   Please stop the server first with Ctrl+C, then run this script again.');
-            console.log('   Or use: npm run reset-db-force');
-            process.exit(1);
-        } else {
-            throw error;
-        }
-    }
-}
-
-// Create new database
+// Create new database (will overwrite existing)
 const db = new sqlite3.Database(dbPath);
 
 console.log('Creating fresh database with initial schema and data...');
 
 db.serialize(() => {
+    // Drop all tables first
+    console.log('Dropping existing tables...');
+    db.run(`DROP TABLE IF EXISTS clearance_history`);
+    db.run(`DROP TABLE IF EXISTS bulk_stock_history`);
+    db.run(`DROP TABLE IF EXISTS bulk_stock`);
+    db.run(`DROP TABLE IF EXISTS delivery_lines`);
+    db.run(`DROP TABLE IF EXISTS deliveries`);
+    db.run(`DROP TABLE IF EXISTS identifier_history`);
+    db.run(`DROP TABLE IF EXISTS product_version_history`);
+    db.run(`DROP TABLE IF EXISTS status_history`);
+    db.run(`DROP TABLE IF EXISTS device_identifiers`);
+    db.run(`DROP TABLE IF EXISTS product_versions`);
+
     // Product versions table
     db.run(`
         CREATE TABLE IF NOT EXISTS product_versions (
@@ -331,7 +327,7 @@ db.serialize(() => {
 
     console.log('Fresh sample data inserted successfully!');
     console.log('');
-    console.log('=== DATABASE RESET COMPLETED ===');
+    console.log('=== DATABASE FORCE RESET COMPLETED ===');
     console.log('The database has been completely reset with fresh mobile retail sample data.');
     console.log('');
     console.log('📱 Mobile Retail Inventory:');
@@ -358,6 +354,6 @@ db.close((err) => {
         console.error('Error closing database:', err);
         process.exit(1);
     }
-    console.log('Database reset and seeding completed!');
+    console.log('Database force reset and seeding completed!');
     process.exit(0);
 });

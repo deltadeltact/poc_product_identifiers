@@ -32,7 +32,7 @@ db.serialize(() => {
             original_imei TEXT,
             original_serial_number TEXT,
             status TEXT NOT NULL DEFAULT 'in_stock' 
-                CHECK (status IN ('in_stock', 'sold', 'defective', 'missing', 'reserved')),
+                CHECK (status IN ('in_stock', 'sold', 'defective', 'missing', 'reserved', 'defective_at_delivery', 'returned_to_supplier', 'written_off')),
             is_clearance BOOLEAN DEFAULT FALSE,
             clearance_price DECIMAL(10,2),
             clearance_reason TEXT,
@@ -179,82 +179,84 @@ db.serialize(() => {
         (2, 'iPhone 15 256GB Blue', '1234567890102', 'imei'),
         (3, 'Samsung Galaxy S24 128GB Phantom Black', '1234567890103', 'imei'),
         (4, 'Samsung Galaxy S24 Ultra 256GB Titanium Gray', '1234567890104', 'imei'),
-        (5, 'Google Pixel 8 Pro 128GB Bay Blue', '1234567890105', 'imei'),
+        (5, 'Xiaomi 14 256GB Jade Green', '1234567890105', 'imei'),
+        -- Audio devices (Serial tracking)
+        (6, 'AirPods Pro 2nd Gen USB-C', '1234567890106', 'serial'),
         -- Smartwatches (Serial tracking)
-        (6, 'Apple Watch Series 9 45mm Midnight', '1234567890106', 'serial'),
-        (7, 'Samsung Galaxy Watch 6 44mm Silver', '1234567890107', 'serial'),
-        (8, 'Apple Watch SE 40mm Starlight', '1234567890108', 'serial'),
+        (7, 'Apple Watch Series 9 45mm Midnight', '1234567890107', 'serial'),
+        (8, 'Samsung Galaxy Watch 6 44mm Silver', '1234567890108', 'serial'),
         -- Accessories (No tracking - bulk)
-        (9, 'AirPods Pro 3rd Gen', '1234567890109', 'none'),
-        (10, 'iPhone 15 Pro Silicone Case Black', '1234567890110', 'none'),
-        (11, 'iPhone 15 Screen Protector Tempered Glass', '1234567890111', 'none'),
-        (12, 'Samsung Galaxy S24 Clear Case', '1234567890112', 'none'),
-        (13, 'USB-C to Lightning Cable 1m', '1234567890113', 'none')
+        (9, 'Screen Protector Tempered Glass Universal', '1234567890109', 'none'),
+        (10, 'Phone Case Clear Silicone Universal', '1234567890110', 'none')
     `);
 
     // Sample deliveries
     db.run(`INSERT OR IGNORE INTO deliveries (id, delivery_number, delivery_date, supplier, status) VALUES 
         (1, 'WS0001', '2025-01-10', 'Apple Distribution Europe', 'booked'),
         (2, 'WS0002', '2025-01-12', 'Samsung Electronics Benelux', 'booked'),
-        (3, 'WS0003', '2025-01-15', 'Mobile Accessories Wholesale', 'booked')
+        (3, 'WS0003', '2025-01-15', 'Xiaomi Global Distribution', 'booked')
     `);
 
     // Sample delivery lines with purchase prices
     db.run(`INSERT OR IGNORE INTO delivery_lines (id, delivery_id, product_version_id, quantity, purchase_price_per_unit) VALUES 
         -- Apple Delivery (WS0001)
-        (1, 1, 1, 15, 899.00),  -- iPhone 15 Pro 128GB
-        (2, 1, 2, 12, 749.00),  -- iPhone 15 256GB
-        (3, 1, 6, 8, 399.00),   -- Apple Watch Series 9
-        (4, 1, 8, 6, 259.00),   -- Apple Watch SE
-        (5, 1, 9, 25, 249.00),  -- AirPods Pro
-        (6, 1, 10, 30, 45.00),  -- iPhone Cases
+        (1, 1, 1, 5, 899.00),   -- iPhone 15 Pro
+        (2, 1, 2, 3, 799.00),   -- iPhone 15
+        (3, 1, 6, 4, 249.00),   -- AirPods Pro
+        (4, 1, 7, 2, 399.00),   -- Apple Watch
         -- Samsung Delivery (WS0002)  
-        (7, 2, 3, 12, 649.00),  -- Galaxy S24
-        (8, 2, 4, 8, 949.00),   -- Galaxy S24 Ultra
-        (9, 2, 7, 6, 299.00),   -- Galaxy Watch 6
-        (10, 2, 12, 40, 25.00), -- Samsung Cases
-        -- Accessories Delivery (WS0003)
-        (11, 3, 5, 10, 699.00), -- Pixel 8 Pro
-        (12, 3, 11, 50, 15.00), -- Screen Protectors  
-        (13, 3, 13, 30, 19.00)  -- USB-C Cables
+        (5, 2, 3, 4, 849.00),   -- Galaxy S24
+        (6, 2, 4, 2, 1199.00),  -- Galaxy S24 Ultra
+        (7, 2, 8, 3, 299.00),   -- Galaxy Watch
+        -- Xiaomi Delivery (WS0003)
+        (8, 3, 5, 6, 699.00),   -- Xiaomi 14
+        (9, 3, 9, 50, 12.99),   -- Screen Protectors  
+        (10, 3, 10, 30, 19.99)  -- Phone Cases
     `);
 
     // Sample device identifiers with delivery links and purchase prices
     db.run(`INSERT OR IGNORE INTO device_identifiers (
         product_version_id, original_product_version_id, delivery_id, 
         imei, serial_number, original_imei, original_serial_number, 
-        status, purchase_price
+        status, received_damaged, damage_description, purchase_price
     ) VALUES 
-        -- iPhone 15 Pro from WS0001
-        (1, 1, 1, '351234567890101', NULL, '351234567890101', NULL, 'in_stock', 899.00),
-        (1, 1, 1, '351234567890102', NULL, '351234567890102', NULL, 'in_stock', 899.00),
-        (1, 1, 1, '351234567890103', NULL, '351234567890103', NULL, 'sold', 899.00),
-        (1, 1, 1, '351234567890104', NULL, '351234567890104', NULL, 'in_stock', 899.00),
-        (1, 1, 1, '351234567890105', NULL, '351234567890105', NULL, 'in_stock', 899.00),
-        -- iPhone 15 from WS0001
-        (2, 2, 1, '351234567890201', NULL, '351234567890201', NULL, 'in_stock', 749.00),
-        (2, 2, 1, '351234567890202', NULL, '351234567890202', NULL, 'in_stock', 749.00),
-        (2, 2, 1, '351234567890203', NULL, '351234567890203', NULL, 'reserved', 749.00),
-        -- Galaxy S24 from WS0002
-        (3, 3, 2, '351234567890301', NULL, '351234567890301', NULL, 'in_stock', 649.00),
-        (3, 3, 2, '351234567890302', NULL, '351234567890302', NULL, 'in_stock', 649.00),
-        (3, 3, 2, '351234567890303', NULL, '351234567890303', NULL, 'sold', 649.00),
-        -- Galaxy S24 Ultra from WS0002
-        (4, 4, 2, '351234567890401', NULL, '351234567890401', NULL, 'in_stock', 949.00),
-        (4, 4, 2, '351234567890402', NULL, '351234567890402', NULL, 'in_stock', 949.00),
-        -- Pixel 8 Pro from WS0003
-        (5, 5, 3, '351234567890501', NULL, '351234567890501', NULL, 'in_stock', 699.00),
-        (5, 5, 3, '351234567890502', NULL, '351234567890502', NULL, 'defective', 699.00),
-        -- Apple Watch Series 9 from WS0001
-        (6, 6, 1, NULL, 'AW9M45001', NULL, 'AW9M45001', 'in_stock', 399.00),
-        (6, 6, 1, NULL, 'AW9M45002', NULL, 'AW9M45002', 'in_stock', 399.00),
-        (6, 6, 1, NULL, 'AW9M45003', NULL, 'AW9M45003', 'sold', 399.00),
-        -- Galaxy Watch 6 from WS0002
-        (7, 7, 2, NULL, 'GW6S44001', NULL, 'GW6S44001', 'in_stock', 299.00),
-        (7, 7, 2, NULL, 'GW6S44002', NULL, 'GW6S44002', 'in_stock', 299.00),
-        -- Apple Watch SE from WS0001
-        (8, 8, 1, NULL, 'AWSE40001', NULL, 'AWSE40001', 'in_stock', 259.00),
-        (8, 8, 1, NULL, 'AWSE40002', NULL, 'AWSE40002', 'missing', 259.00)
+        -- iPhone 15 Pro from WS0001 (IMEI tracking)
+        (1, 1, 1, '351234567890101', NULL, '351234567890101', NULL, 'in_stock', 0, NULL, 899.00),
+        (1, 1, 1, '351234567890102', NULL, '351234567890102', NULL, 'in_stock', 0, NULL, 899.00),
+        (1, 1, 1, '351234567890103', NULL, '351234567890103', NULL, 'defective_at_delivery', 1, 'Screen cracked during shipping', 899.00),
+        (1, 1, 1, '351234567890104', NULL, '351234567890104', NULL, 'in_stock', 0, NULL, 899.00),
+        (1, 1, 1, '351234567890105', NULL, '351234567890105', NULL, 'sold', 0, NULL, 899.00),
+        -- iPhone 15 from WS0001 (IMEI tracking)
+        (2, 2, 1, '351234567890201', NULL, '351234567890201', NULL, 'in_stock', 0, NULL, 799.00),
+        (2, 2, 1, '351234567890202', NULL, '351234567890202', NULL, 'in_stock', 0, NULL, 799.00),
+        (2, 2, 1, '351234567890203', NULL, '351234567890203', NULL, 'in_stock', 0, NULL, 799.00),
+        -- Galaxy S24 from WS0002 (IMEI tracking)
+        (3, 3, 2, '351234567890301', NULL, '351234567890301', NULL, 'in_stock', 0, NULL, 849.00),
+        (3, 3, 2, '351234567890302', NULL, '351234567890302', NULL, 'in_stock', 0, NULL, 849.00),
+        (3, 3, 2, '351234567890303', NULL, '351234567890303', NULL, 'sold', 0, NULL, 849.00),
+        (3, 3, 2, '351234567890304', NULL, '351234567890304', NULL, 'in_stock', 0, NULL, 849.00),
+        -- Galaxy S24 Ultra from WS0002 (IMEI tracking)
+        (4, 4, 2, '351234567890401', NULL, '351234567890401', NULL, 'in_stock', 0, NULL, 1199.00),
+        (4, 4, 2, '351234567890402', NULL, '351234567890402', NULL, 'defective_at_delivery', 1, 'Minor scratches on back panel', 1199.00),
+        -- Xiaomi 14 from WS0003 (IMEI tracking)
+        (5, 5, 3, '351234567890501', NULL, '351234567890501', NULL, 'in_stock', 0, NULL, 699.00),
+        (5, 5, 3, '351234567890502', NULL, '351234567890502', NULL, 'in_stock', 0, NULL, 699.00),
+        (5, 5, 3, '351234567890503', NULL, '351234567890503', NULL, 'in_stock', 0, NULL, 699.00),
+        (5, 5, 3, '351234567890504', NULL, '351234567890504', NULL, 'reserved', 0, NULL, 699.00),
+        (5, 5, 3, '351234567890505', NULL, '351234567890505', NULL, 'in_stock', 0, NULL, 699.00),
+        (5, 5, 3, '351234567890506', NULL, '351234567890506', NULL, 'sold', 0, NULL, 699.00),
+        -- AirPods Pro from WS0001 (Serial tracking)
+        (6, 6, 1, NULL, 'AP2UC24001', NULL, 'AP2UC24001', 'in_stock', 0, NULL, 249.00),
+        (6, 6, 1, NULL, 'AP2UC24002', NULL, 'AP2UC24002', 'in_stock', 0, NULL, 249.00),
+        (6, 6, 1, NULL, 'AP2UC24003', NULL, 'AP2UC24003', 'sold', 0, NULL, 249.00),
+        (6, 6, 1, NULL, 'AP2UC24004', NULL, 'AP2UC24004', 'defective_at_delivery', 1, 'Charging case dented', 249.00),
+        -- Apple Watch Series 9 from WS0001 (Serial tracking)
+        (7, 7, 1, NULL, 'AW9S44001', NULL, 'AW9S44001', 'in_stock', 0, NULL, 399.00),
+        (7, 7, 1, NULL, 'AW9S44002', NULL, 'AW9S44002', 'sold', 0, NULL, 399.00),
+        -- Galaxy Watch 6 from WS0002 (Serial tracking)
+        (8, 8, 2, NULL, 'GW6S44001', NULL, 'GW6S44001', 'in_stock', 0, NULL, 299.00),
+        (8, 8, 2, NULL, 'GW6S44002', NULL, 'GW6S44002', 'in_stock', 0, NULL, 299.00),
+        (8, 8, 2, NULL, 'GW6S44003', NULL, 'GW6S44003', 'missing', 0, NULL, 299.00)
     `);
 
     // Create initial status history for ALL identifiers - they all start as 'in_stock' when delivered
@@ -282,27 +284,18 @@ db.serialize(() => {
         (22, 'in_stock', 'missing', 'admin', 'Niet gevonden bij inventarisatie')
     `);
 
-    // Sample bulk stock for non-tracked products with purchase price history
+    // Sample bulk stock for non-tracked products
     db.run(`INSERT OR IGNORE INTO bulk_stock (product_version_id, quantity) VALUES 
-        (9, 22),   -- AirPods Pro (3 sold from original 25)
-        (10, 25),  -- iPhone Cases (5 sold from original 30)
-        (11, 45),  -- Screen Protectors (5 sold from original 50)
-        (12, 35),  -- Samsung Cases (5 sold from original 40)
-        (13, 28)   -- USB-C Cables (2 sold from original 30)
+        (9, 45),   -- Screen Protectors (5 sold from original 50)
+        (10, 27)   -- Phone Cases (3 sold from original 30)
     `);
 
-    // Sample bulk stock history
+    // Sample bulk stock history  
     db.run(`INSERT OR IGNORE INTO bulk_stock_history (product_version_id, old_quantity, new_quantity, change_quantity, changed_by, note) VALUES 
-        (9, 0, 25, 25, 'system', 'Delivery booking WS0001'),
-        (9, 25, 22, -3, 'admin', 'Verkoop aan klanten'),
-        (10, 0, 30, 30, 'system', 'Delivery booking WS0001'),
-        (10, 30, 25, -5, 'admin', 'Verkoop aan klanten'),
-        (11, 0, 50, 50, 'system', 'Delivery booking WS0003'),
-        (11, 50, 45, -5, 'admin', 'Verkoop aan klanten'),
-        (12, 0, 40, 40, 'system', 'Delivery booking WS0002'),
-        (12, 40, 35, -5, 'admin', 'Verkoop aan klanten'),
-        (13, 0, 30, 30, 'system', 'Delivery booking WS0003'),
-        (13, 30, 28, -2, 'admin', 'Verkoop aan klanten')
+        (9, 0, 50, 50, 'system', 'Delivery booking WS0003'),
+        (9, 50, 45, -5, 'admin', 'Verkoop aan klanten'),
+        (10, 0, 30, 30, 'system', 'Delivery booking WS0003'),
+        (10, 30, 27, -3, 'admin', 'Verkoop aan klanten')
     `);
 
     console.log('Sample data inserted successfully!');

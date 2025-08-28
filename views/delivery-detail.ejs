@@ -383,6 +383,18 @@ let hasIdentifiers = lines.some(line => line.identifiers && line.identifiers.len
                                             statusBadgeClass = 'bg-purple-100 text-purple-700';
                                             statusText = 'Gereserveerd';
                                             break;
+                                        case 'defective_at_delivery':
+                                            statusBadgeClass = 'bg-orange-100 text-orange-700';
+                                            statusText = 'Defect bij levering';
+                                            break;
+                                        case 'returned_to_supplier':
+                                            statusBadgeClass = 'bg-gray-100 text-gray-700';
+                                            statusText = 'Geretourneerd';
+                                            break;
+                                        case 'written_off':
+                                            statusBadgeClass = 'bg-black text-white';
+                                            statusText = 'Afgeboekt';
+                                            break;
                                     }
                                 %>
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= statusBadgeClass %>">
